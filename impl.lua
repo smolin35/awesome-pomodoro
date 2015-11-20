@@ -53,8 +53,8 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
     last_icon_used = nil
 
     function set_pomodoro_icon(icon_name)
-	icon = typicons.render(icon_name)
-	if icon then pomodoro.icon_widget:set_markup(string.format("%s ", icon)) end
+        icon = typicons.render(icon_name)
+        if icon then pomodoro.icon_widget:set_markup(string.format("%s ", icon)) end
     end
 
     function pomodoro:settime(t)
@@ -241,10 +241,10 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
             objects = { pomodoro.widget, pomodoro.icon_widget},
             timer_function = function()
                 local collected = 'Collected ' .. pomodoro.npomodoros .. ' pomodoros so far.\n'
-				local settings = string.format("Settings:\n * work: %d min\n * short pause: %d min\n * long pause: %d min",
-										pomodoro.work_duration / 60,
-										pomodoro.pause_duration / 60,
-										pomodoro.long_pause_duration / 60)
+                local settings = string.format("Settings:\n * work: %d min\n * short pause: %d min\n * long pause: %d min",
+                pomodoro.work_duration / 60,
+                pomodoro.pause_duration / 60,
+                pomodoro.long_pause_duration / 60)
                 if pomodoro.timer.started then
                     if pomodoro.working then
                         return collected .. 'Work ending in ' .. os.date("%M:%S", pomodoro.left)
@@ -252,9 +252,9 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
                         return collected .. 'Rest ending in ' .. os.date("%M:%S", pomodoro.left)
                     end
                 else
-					return string.format("%s\nPomodoro not started\n\n%s",
-										collected,
-										settings)
+                    return string.format("%s\nPomodoro not started\n\n%s",
+                    collected,
+                    settings)
                 end
                 return 'Bad tooltip'
             end,
