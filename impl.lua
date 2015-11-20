@@ -6,6 +6,7 @@ local setmetatable = setmetatable
 local print     = print
 local tonumber = tonumber
 local math = require("math")
+local typicons = require("typicons")
 
 module("pomodoro.impl")
 
@@ -28,7 +29,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
     pomodoro.work_text = "Time for a pause!"
     pomodoro.working = true
     pomodoro.widget = wibox.widget.textbox()
-    pomodoro.icon_widget = wibox.widget.imagebox()
+    pomodoro.icon_widget = wibox.widget.textbox()
     pomodoro.timer = timer { timeout = 1 }
 
     -- Callbacks to be called when the pomodoro finishes or the rest time finishes
@@ -38,12 +39,8 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
     last_icon_used = nil
 
     function set_pomodoro_icon(icon_name)
-        local pomodoro_image_path = awful.util.getdir("config") .."/pomodoro/images/" .. icon_name .. ".png"
-        if last_icon_used == pomodoro_image_path then
-            return
-        end
-        last_icon_used = pomodoro_image_path
-        pomodoro.icon_widget:set_image(pomodoro_image_path)
+	icon = typicons.render(icon_name)
+	if icon then pomodoro.icon_widget:set_markup(string.format("%s ", icon)) end
     end
 
     function pomodoro:settime(t)
@@ -77,7 +74,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
     function pomodoro:pause()
         -- TODO: Fix the showed remaining text
         pomodoro.timer:stop()
-        set_pomodoro_icon('locked')
+        set_pomodoro_icon('lock-closed-outline')
     end
 
     function pomodoro:stop()
@@ -85,7 +82,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
         pomodoro.working = true
         pomodoro.left = pomodoro.work_duration
         pomodoro:settime(pomodoro.work_duration)
-        set_pomodoro_icon('gray')
+        set_pomodoro_icon('coffee')
     end
 
     function pomodoro:increase_time()
@@ -127,20 +124,11 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
     function pomodoro:ticking_time()
         if pomodoro.left > 0 then
             if pomodoro.working then
-                local pomodoro_portion = pomodoro.work_duration / 3
-                if pomodoro.left > (2 * pomodoro_portion) then
-                    set_pomodoro_icon('green')
-                elseif pomodoro.left > pomodoro_portion then
-                    set_pomodoro_icon('orange')
-                else
-                    set_pomodoro_icon('red')
-                end
-            else
-                set_pomodoro_icon('green')
+                set_pomodoro_icon('briefcase')
             end
             pomodoro:settime(pomodoro.left)
         else
-            set_pomodoro_icon('gray')
+            set_pomodoro_icon('coffee')
             if pomodoro.working then
                 pomodoro.npomodoros = pomodoro.npomodoros + 1
                 if pomodoro.npomodoros % 4 == 0 then
@@ -179,7 +167,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
         local working_from_last_run = xresources:match('awesome.Pomodoro.working:%s+%w+')
         local npomodoros_from_last_run = xresources:match('awesome.Pomodoro.npomodoros:%s+%d+')
 
-        set_pomodoro_icon('gray')
+        set_pomodoro_icon('coffee')
 
         -- Timer configuration
         --
