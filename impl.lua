@@ -6,7 +6,6 @@ local setmetatable = setmetatable
 local print     = print
 local tonumber = tonumber
 local math = require("math")
-local typicons = require("typicons")
 
 module("pomodoro.impl")
 
@@ -53,8 +52,8 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
     last_icon_used = nil
 
     function set_pomodoro_icon(icon_name)
-        icon = typicons.render(icon_name)
-        if icon then pomodoro.icon_widget:set_markup(string.format("%s ", icon)) end
+        icon = "&#127813;"
+        if icon then pomodoro.icon_widget:set_markup(string.format("<span font=\"Noto Emoji 12\">%s</span>", icon)) end
     end
 
     function pomodoro:settime(t)
