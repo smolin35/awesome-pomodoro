@@ -62,7 +62,6 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
         local font = "font='Noto Emoji 12'"
         local markup = "<span %s %s>&#127813;</span>"
         markup = markup:format(color, font)
-        io.write(markup, "\n")
 
         pomodoro.icon_widget:set_markup(markup)
     end
@@ -237,7 +236,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
     end
 
     function pomodoro:init()
-        local xresources = awful.util.pread("xrdb -query")
+        local xresources = awful.spawn.pread("xrdb -query")
         local time_from_last_run = xresources:match('awesome.Pomodoro.time:%s+%d+')
         local started_from_last_run = xresources:match('awesome.Pomodoro.started:%s+%w+')
         local working_from_last_run = xresources:match('awesome.Pomodoro.working:%s+%w+')
@@ -255,7 +254,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
             if restarting then
                 started_as_number = pomodoro.timer.started and 1 or 0
                 working_as_number = pomodoro.working and 1 or 0
-                awful.util.pread('echo "awesome.Pomodoro.time: ' .. pomodoro.left
+                awful.spawn.pread('echo "awesome.Pomodoro.time: ' .. pomodoro.left
                 .. '\nawesome.Pomodoro.started: ' .. started_as_number
                 .. '\nawesome.Pomodoro.working: ' .. working_as_number
                 .. '\nawesome.Pomodoro.npomodoros: ' .. pomodoro.npomodoros
