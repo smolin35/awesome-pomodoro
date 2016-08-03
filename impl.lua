@@ -62,7 +62,8 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
         local font = "font='Noto Emoji 12'"
         local markup = "<span %s %s>&#127813;</span>"
         markup = markup:format(color, font)
-        io.write(markup, "\n")
+        -- Uncomment to debug the markup
+        -- io.write(markup, "\n")
 
         pomodoro.icon_widget:set_markup(markup)
     end
