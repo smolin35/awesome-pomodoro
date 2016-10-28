@@ -49,13 +49,13 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
 
     function pomodoro.set_pomodoro_icon()
         local color
-        local red = beautiful.colors.red or "#FF0000"
-        local green = beautiful.colors.green or "#00FF00"
+        local red = beautiful.pomodoro_start or "#FF0000"
+        local green = beautiful.pomodoro_end or "#00FF00"
 
         if pomodoro.left then
             color = pomodoro.fade_color(green, red)
         else
-            color = beautiful.colors.white or "#FFFFFF"
+            color = beautiful.pomodoro_inactive or "#FFFFFF"
         end
 
         color = string.format("fgcolor='%s'", color)
