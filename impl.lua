@@ -49,21 +49,22 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
 
     function pomodoro.set_pomodoro_icon()
         local color
-        local red = beautiful.pomodoro_start or "#FF0000"
-        local green = beautiful.pomodoro_end or "#00FF00"
+        local red   = beautiful.pomodoro_work or "#FF0000"
+        local green = beautiful.pomodoro_pause  or "#00FF00"
 
         if pomodoro.left then
+            -- Color for when the timer has been started
             color = pomodoro.fade_color(green, red)
         else
-            color = beautiful.pomodoro_inactive or "#FFFFFF"
+            -- Color for when the timer has not yet started
+            color = beautiful.pomodoro_inactive or "#C0C0C0"
         end
 
         color = string.format("fgcolor='%s'", color)
         local font = "font='Noto Emoji 12'"
         local markup = "<span %s %s>&#127813;</span>"
         markup = markup:format(color, font)
-        -- Uncomment to debug the markup
-        -- io.write(markup, "\n")
+
         pomodoro.icon_widget:set_markup(markup)
     end
 
@@ -237,11 +238,11 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
     end
 
     function pomodoro:init()
-        local p = io.popen("xrdb -query")
-        local xresources = p:read("*all")
-        local time_from_last_run = xresources:match('awesome.Pomodoro.time:%s+%d+')
-        local started_from_last_run = xresources:match('awesome.Pomodoro.started:%s+%w+')
-        local working_from_last_run = xresources:match('awesome.Pomodoro.working:%s+%w+')
+        local xresources = io.popen("xrdb -query"):read("*a")
+
+        local time_from_last_run       = xresources:match('awesome.Pomodoro.time:%s+%d+')
+        local started_from_last_run    = xresources:match('awesome.Pomodoro.started:%s+%w+')
+        local working_from_last_run    = xresources:match('awesome.Pomodoro.working:%s+%w+')
         local npomodoros_from_last_run = xresources:match('awesome.Pomodoro.npomodoros:%s+%d+')
 
         pomodoro:set_pomodoro_icon()
@@ -256,7 +257,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
             if restarting then
                 started_as_number = pomodoro.timer.started and 1 or 0
                 working_as_number = pomodoro.working and 1 or 0
-                awful.spawn.with_shell('echo "awesome.Pomodoro.time: ' .. pomodoro.left
+                awful.util.pread('echo "awesome.Pomodoro.time: ' .. pomodoro.left
                 .. '\nawesome.Pomodoro.started: ' .. started_as_number
                 .. '\nawesome.Pomodoro.working: ' .. working_as_number
                 .. '\nawesome.Pomodoro.npomodoros: ' .. pomodoro.npomodoros
