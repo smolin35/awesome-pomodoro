@@ -55,6 +55,8 @@ local awesome = {
 }
 
 local pomodoro = createPomodoro(wibox, awful, naughty, beautiful, timer, awesome)
+-- We are only worried about the formating of `t`
+pomodoro.format = function (t) return t end
 
 
 describe("Should set the default values properly", function()
@@ -76,11 +78,11 @@ describe('Set time should change the textbox appropriately', function()
     local s = spy.on(pomodoro.widget, "set_markup")
     it('more than one hour pomodoro should be formatted with an hour part', function()
         pomodoro:settime(3601)
-        assert.spy(s).was_called_with(pomodoro.widget, "Pomodoro: <b>01:00:01</b>")
+        assert.spy(s).was_called_with(pomodoro.widget, "01:00:01")
     end)
     it('less than one hour should be set with only minutes and seconds', function()
         pomodoro:settime(1500)
-        assert.spy(s).was_called_with(pomodoro.widget, "Pomodoro: <b>25:00</b>")
+        assert.spy(s).was_called_with(pomodoro.widget, "25:00")
     end)
 end)
 
@@ -192,67 +194,6 @@ describe('Preserve the pomodoro before restart if any', function()
         assert.are.equal(716, pomodoro.left)
     end)
 end)
-
-describe('Should use the images properly', function()
-    path_we_got = nil
-    local pomodoro = createPomodoro(wibox, awful, naughty, beautiful, timer, awesome)
-    pomodoro.module_path = "pomodoro/"
-    pomodoro.icon_widget.set_image = function(self, image_path) 
-        path_we_got = image_path
-    end
-    pomodoro.working = true
-
-    it('should set the default icon to gray by default', function()
-        pomodoro:init()
-        assert.are.equal('/home/cooluser/.config/awesome/pomodoro/images/gray.png', path_we_got)
-    end)
-
-    it('should set the image to the locked one when we pause a pomodoro', function()
-        pomodoro:pause()
-        assert.are.equal('/home/cooluser/.config/awesome/pomodoro/images/locked.png', path_we_got)
-    end)
-
-    it('should set the image to the gray one when we stop a pomodoro', function()
-        pomodoro:stop()
-        assert.are.equal('/home/cooluser/.config/awesome/pomodoro/images/gray.png', path_we_got)
-    end)
-
-    it('should change the image depending on the time that elapsed for the pomodoro', function()
-        -- there is more than 2/3 from the next break
-        pomodoro.left = 26
-        pomodoro.work_duration = 30
-        pomodoro:ticking_time()
-        assert.are.equal('/home/cooluser/.config/awesome/pomodoro/images/green.png', path_we_got)
-
-        -- there is more than 1/3 from the next break but smaller than 2/3
-        pomodoro.left = 16
-        pomodoro.work_duration = 30
-        pomodoro:ticking_time()
-        assert.are.equal('/home/cooluser/.config/awesome/pomodoro/images/orange.png', path_we_got)
-
-        pomodoro.left = 9
-        pomodoro.work_duration = 30
-        pomodoro:ticking_time()
-        assert.are.equal('/home/cooluser/.config/awesome/pomodoro/images/red.png', path_we_got)
-    end)
-
-    it('should set the icon back to gray when the pomodoro finishes', function()
-        pomodoro.left = 0
-        pomodoro:ticking_time()
-        assert.are.equal('/home/cooluser/.config/awesome/pomodoro/images/gray.png', path_we_got)
-    end)
-    it('shouldn\'t change the icon if we are currently not working', function()
-        pomodoro.working = false
-        pomodoro.work_duration = 30
-        interval_elements = {26, 16, 9}
-        for i, element in ipairs(interval_elements) do
-            pomodoro.left = element
-            pomodoro:ticking_time()
-            assert.are.equal('/home/cooluser/.config/awesome/pomodoro/images/green.png', path_we_got)
-        end
-    end)
-end)
-
 
 describe('Long breaks', function()
 
