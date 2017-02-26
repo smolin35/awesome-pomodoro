@@ -45,10 +45,6 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
     pomodoro.icon_widget = wibox.widget.textbox()
     pomodoro.timer = timer { timeout = 1 }
 
-    -- Callbacks to be called when the pomodoro finishes or the rest time finishes
-    pomodoro.on_work_pomodoro_finish_callbacks = {}
-    pomodoro.on_pause_pomodoro_finish_callbacks = {}
-
     function pomodoro.set_pomodoro_icon()
         local color
         local red   = beautiful.pomodoro_work or "#FF0000"
@@ -222,16 +218,10 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
                 self:emit_signal("stop_working")
                 pomodoro:notify(pomodoro.work_title, pomodoro.work_text,
                 pomodoro.pause_duration, false)
-                for _, value in ipairs(pomodoro.on_work_pomodoro_finish_callbacks) do
-                    value()
-                end
             else
                 pomodoro:notify(pomodoro.pause_title, pomodoro.pause_text,
                 pomodoro.work_duration, true)
                 self:emit_signal("stop_pause")
-                for _, value in ipairs(pomodoro.on_pause_pomodoro_finish_callbacks) do
-                    value()
-                end
             end
             pomodoro.timer:stop()
         end
