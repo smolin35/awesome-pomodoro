@@ -1,3 +1,5 @@
+local module_path = (...):match ("(.+/)[^/]+$") or ""
+
 local ipairs = ipairs
 local tonumber = tonumber
 local io = require("io")
@@ -7,9 +9,9 @@ local string = require("string")
 
 module("pomodoro.impl")
 
-return function(wibox, awful, naughty, beautiful, timer, awesome)
+return function(wibox, awful, naughty, beautiful, timer, awesome, base)
     -- pomodoro timer widget
-    local pomodoro = {}
+    pomodoro = wibox.widget.base.make_widget()
     -- tweak these values in seconds to your liking
     pomodoro.short_pause_duration = 5 * 60
     pomodoro.long_pause_duration = 15 * 60
@@ -18,6 +20,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
     pomodoro.pause_duration = pomodoro.short_pause_duration
 
     pomodoro.change = 60
+    pomodoro.module_path = module_path
     pomodoro.changed = false
     pomodoro.changed_timer = timer({timeout = 3})
     pomodoro.changed_timer:connect_signal("timeout", function ()
@@ -26,7 +29,6 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
         pomodoro.changed_timer:stop()
         pomodoro.widget:set_text(pomodoro.format(pomodoro.work_duration))
     end)
-
 
     pomodoro.format = function (t)
         if pomodoro.changed or pomodoro.timer.started then
@@ -139,12 +141,17 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
         pomodoro.working = working
     end
 
-    function pomodoro.start()
+    function pomodoro:start()
         pomodoro.last_time = os.time()
         pomodoro.timer:again()
+        if pomodoro.working then
+            self:emit_signal("start_working")
+        else
+            self:emit_signal("start_pause")
+        end
     end
 
-    function pomodoro.pause()
+    function pomodoro:pause()
         -- TODO: Fix the showed remaining text
         pomodoro.timer:stop()
         pomodoro:set_pomodoro_icon()
@@ -212,6 +219,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
                 else
                     pomodoro.pause_duration = pomodoro.short_pause_duration
                 end
+                self:emit_signal("stop_working")
                 pomodoro:notify(pomodoro.work_title, pomodoro.work_text,
                 pomodoro.pause_duration, false)
                 for _, value in ipairs(pomodoro.on_work_pomodoro_finish_callbacks) do
@@ -220,6 +228,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
             else
                 pomodoro:notify(pomodoro.pause_title, pomodoro.pause_text,
                 pomodoro.work_duration, true)
+                self:emit_signal("stop_pause")
                 for _, value in ipairs(pomodoro.on_pause_pomodoro_finish_callbacks) do
                     value()
                 end
