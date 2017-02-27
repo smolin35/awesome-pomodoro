@@ -27,15 +27,22 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
         pomodoro.changed=false
         pomodoro.changed_timer:again()
         pomodoro.changed_timer:stop()
-        pomodoro.widget:set_text(pomodoro.format(pomodoro.work_duration))
+        pomodoro.widget:set_markup(pomodoro.format(pomodoro.work_duration))
+        pomodoro.icon_widget:set_markup(pomodoro.format_icon(pomodoro.work_duration))
     end)
 
     pomodoro.format = function (t)
         if pomodoro.changed or pomodoro.timer.started then
             return string.format("<span font='%s'>%s</span>", beautiful.font, t)
-        else return ""
+        else
+            return ""
         end
     end
+
+    pomodoro.format_icon = function (t)
+        return pomodoro.pomodoro_icon()
+    end
+
     pomodoro.pause_title = "Pause finished."
     pomodoro.pause_text = "Get back to work!"
     pomodoro.work_title = "Pomodoro finished."
@@ -45,7 +52,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
     pomodoro.icon_widget = wibox.widget.textbox()
     pomodoro.timer = timer { timeout = 1 }
 
-    function pomodoro.set_pomodoro_icon()
+    function pomodoro.pomodoro_icon()
         local color
         local red   = beautiful.pomodoro_work or "#FF0000"
         local green = beautiful.pomodoro_pause  or "#00FF00"
@@ -61,9 +68,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
         color = string.format("fgcolor='%s'", color)
         local font = "font='Noto Emoji 12'"
         local markup = "<span %s %s>&#127813;</span>"
-        markup = markup:format(color, font)
-
-        pomodoro.icon_widget:set_markup(markup)
+        return markup:format(color, font)
     end
 
     function pomodoro.split_rgb(color)
@@ -136,7 +141,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
     function pomodoro:pause()
         -- TODO: Fix the showed remaining text
         pomodoro.timer:stop()
-        pomodoro:set_pomodoro_icon()
+        pomodoro.icon_widget:set_markup(pomodoro.format_icon())
     end
 
     function pomodoro:stop()
@@ -144,7 +149,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
         pomodoro.working = true
         pomodoro.left = pomodoro.work_duration
         pomodoro:settime(pomodoro.work_duration)
-        pomodoro:set_pomodoro_icon()
+        pomodoro.icon_widget:set_markup(pomodoro.format_icon())
     end
 
     function pomodoro:increase_time()
@@ -212,7 +217,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
             pomodoro.timer:stop()
         end
         pomodoro:settime(pomodoro.left)
-        pomodoro:set_pomodoro_icon()
+        pomodoro.icon_widget:set_markup(pomodoro.format_icon())
     end
 
     -- Function that keeps the logic for ticking
@@ -232,7 +237,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
         local working_from_last_run    = xresources:match('awesome.Pomodoro.working:%s+%w+')
         local npomodoros_from_last_run = xresources:match('awesome.Pomodoro.npomodoros:%s+%d+')
 
-        pomodoro:set_pomodoro_icon()
+        pomodoro.icon_widget:set_markup(pomodoro.format_icon())
 
         -- Timer configuration
         pomodoro.timer:connect_signal("timeout", pomodoro.ticking)
