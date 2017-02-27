@@ -173,6 +173,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
         pomodoro.timer:stop()
 
         if self.working then
+            self:emit_signal("work_stop", self.left)
             self.npomodoros = self.npomodoros + 1
             self.working = false
             if self.npomodoros % 4 == 0 then
@@ -182,6 +183,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
             end
             self.left = self.pause_duration
         else
+            self:emit_signal("pause_stop", self.left)
             self.working = true
             self.left = self.work_duration
         end
