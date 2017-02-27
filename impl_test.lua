@@ -17,7 +17,8 @@ local wibox = {
         base = {
             make_widget = function()
                 return {
-                    emit_signal = function(self, s) return nil end
+                    emit_signal = function(self, s) return nil end,
+                    connect_signal = function(self, s) return nil end
                 }
             end
         }
@@ -83,22 +84,6 @@ describe('Set time should change the textbox appropriately', function()
     it('less than one hour should be set with only minutes and seconds', function()
         pomodoro:settime(1500)
         assert.spy(s).was_called_with(pomodoro.widget, "25:00")
-    end)
-end)
-
-describe('Notifications should send a naughty notification and change pomodoro object appropriately', function()
-    -- TODO: For some reason I cannot mock naughty...
-    it('naughty should be called properly', function()
-        local s = spy.on(naughty, 'notify')
-        pomodoro:notify('title', 'sometext', 10, true)
-    end)
-    it('should set the left to the new duration for the new state', function()
-        pomodoro:notify('title', 'sometext', 10, true)
-        assert.are.equal(10, pomodoro.left)
-    end)
-    it('should set working to false if the next timer is not for a work duration', function()
-        pomodoro:notify('title', 'sometext', 10, false)
-        assert.are.equal(false, pomodoro.working)
     end)
 end)
 

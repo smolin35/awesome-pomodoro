@@ -123,27 +123,13 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
         self.widget:set_markup(pomodoro.format(t))
     end
 
-    function pomodoro:notify(title, text, duration, working)
-        naughty.notify {
-            bg = beautiful.bg_urgent,
-            fg = beautiful.fg_urgent,
-            title = title,
-            text  = text,
-            timeout = 10
-        }
-
-        pomodoro.left = duration
-        pomodoro:settime(duration)
-        pomodoro.working = working
-    end
-
     function pomodoro:start()
         pomodoro.last_time = os.time()
         pomodoro.timer:again()
         if pomodoro.working then
-            self:emit_signal("start_working")
+            self:emit_signal("work_start")
         else
-            self:emit_signal("start_pause")
+            self:emit_signal("pause_start")
         end
     end
 
@@ -215,16 +201,17 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
                 else
                     pomodoro.pause_duration = pomodoro.short_pause_duration
                 end
-                self:emit_signal("stop_working")
-                pomodoro:notify(pomodoro.work_title, pomodoro.work_text,
-                pomodoro.pause_duration, false)
+                self:emit_signal("work_elapsed")
+                pomodoro.left = pomodoro.pause_duration
+                pomodoro.working = false
             else
-                pomodoro:notify(pomodoro.pause_title, pomodoro.pause_text,
-                pomodoro.work_duration, true)
-                self:emit_signal("stop_pause")
+                self:emit_signal("pause_elapsed")
+                pomodoro.left = pomodoro.work_duration
+                pomodoro.working = true
             end
             pomodoro.timer:stop()
         end
+        pomodoro:settime(pomodoro.left)
         pomodoro:set_pomodoro_icon()
     end
 
@@ -248,8 +235,28 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
         pomodoro:set_pomodoro_icon()
 
         -- Timer configuration
-        --
         pomodoro.timer:connect_signal("timeout", pomodoro.ticking)
+
+        -- Notifications
+        pomodoro:connect_signal("work_elapsed", function()
+            naughty.notify {
+                bg = beautiful.bg_urgent,
+                fg = beautiful.fg_urgent,
+                title = pomodoro.work_title,
+                text  = pomodoro.work_text,
+                timeout = 10
+            }
+        end)
+        pomodoro:connect_signal("pause_elapsed", function()
+            naughty.notify {
+                bg = beautiful.bg_urgent,
+                fg = beautiful.fg_urgent,
+                title = pomodoro.pause_title,
+                text  = pomodoro.pause_text,
+                timeout = 10
+            }
+        end)
+
 
         awesome.connect_signal("exit", function(restarting)
             -- Save current state in xrdb.
