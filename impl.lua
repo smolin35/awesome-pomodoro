@@ -120,10 +120,15 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
     end
 
     function pomodoro:settime(t)
+        s = ""
+        if t < 0 then
+            s = "-"
+            t = -t
+        end
         if t >= 3600 then
-            t = os.date("!%X", t)
+            t = os.date("!"..s.."%H:%M:%S", t)
         else
-            t = os.date("%M:%S", t)
+            t = os.date("!"..s.."%M:%S", t)
         end
         self.widget:set_markup(pomodoro.format(t))
     end
