@@ -49,6 +49,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
     pomodoro.work_text = "Time for a pause!"
     pomodoro.is_running = false
     pomodoro.working = true
+    pomodoro.auto_start_pomodoro = true
     pomodoro.widget = wibox.widget.textbox()
     pomodoro.icon_widget = wibox.widget.textbox()
     pomodoro.timer = timer { timeout = 1 }
@@ -148,7 +149,9 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
     function pomodoro:toggle()
         if pomodoro.left <= 0 then
             self:stop()
-            self:start()
+            if self.auto_start_pomodoro then
+                self:start()
+            end
         else
             if pomodoro.is_running then
                 self:pause()
