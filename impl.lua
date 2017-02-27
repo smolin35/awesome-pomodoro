@@ -47,6 +47,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
     pomodoro.pause_text = "Get back to work!"
     pomodoro.work_title = "Pomodoro finished."
     pomodoro.work_text = "Time for a pause!"
+    pomodoro.is_running = false
     pomodoro.working = true
     pomodoro.widget = wibox.widget.textbox()
     pomodoro.icon_widget = wibox.widget.textbox()
@@ -134,27 +135,55 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
     end
 
     function pomodoro:start()
-        pomodoro.last_time = os.time()
-        pomodoro.timer:again()
-        if pomodoro.working then
+        self.last_time = os.time()
+        self.is_running = true
+        self.timer:again()
+        if self.working then
             self:emit_signal("work_start")
         else
             self:emit_signal("pause_start")
         end
     end
 
+    function pomodoro:toggle()
+        if pomodoro.left <= 0 then
+            self:stop()
+            self:start()
+        else
+            if pomodoro.is_running then
+                self:pause()
+            else
+                self:start()
+            end
+        end
+    end
+
     function pomodoro:pause()
         -- TODO: Fix the showed remaining text
+        pomodoro.is_running = false
         pomodoro.timer:stop()
         pomodoro.icon_widget:set_markup(pomodoro.format_icon())
     end
 
     function pomodoro:stop()
+        pomodoro.is_running = false
         pomodoro.timer:stop()
-        pomodoro.working = true
-        pomodoro.left = pomodoro.work_duration
-        pomodoro:settime(pomodoro.work_duration)
-        pomodoro.icon_widget:set_markup(pomodoro.format_icon())
+
+        if self.working then
+            self.npomodoros = self.npomodoros + 1
+            self.working = false
+            if self.npomodoros % 4 == 0 then
+                self.pause_duration = self.long_pause_duration
+            else
+                self.pause_duration = self.short_pause_duration
+            end
+            self.left = self.pause_duration
+        else
+            self.working = true
+            self.left = self.work_duration
+        end
+        self:settime(self.left)
+        self.icon_widget:set_markup(pomodoro.format_icon())
     end
 
     function pomodoro:increase_time()
@@ -200,26 +229,12 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
     end
 
     function pomodoro:ticking_time()
-        if pomodoro.left > 0 then
-            pomodoro:settime(pomodoro.left)
-        else
+        if pomodoro.left == 0 then
             if pomodoro.working then
-                pomodoro.npomodoros = pomodoro.npomodoros + 1
-                pomodoro.working = false
-                if pomodoro.npomodoros % 4 == 0 then
-                    pomodoro.pause_duration = pomodoro.long_pause_duration
-                else
-                    pomodoro.pause_duration = pomodoro.short_pause_duration
-                end
                 self:emit_signal("work_elapsed")
-                pomodoro.left = pomodoro.pause_duration
-                pomodoro.working = false
             else
                 self:emit_signal("pause_elapsed")
-                pomodoro.left = pomodoro.work_duration
-                pomodoro.working = true
             end
-            pomodoro.timer:stop()
         end
         pomodoro:settime(pomodoro.left)
         pomodoro.icon_widget:set_markup(pomodoro.format_icon())
