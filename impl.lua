@@ -253,9 +253,16 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
         pomodoro:ticking_time()
     end
 
+    function pomodoro:spawn_sync(cmd)
+        local fh = io.popen(cmd, 'r')
+        local stdout = fh:read('*all')
+        fh:close()
+        io.write('spawn_orig')
+        return stdout
+    end
+
     function pomodoro:init()
-        local pread = awful.spawn and awful.spawn.pread or awful.util.pread
-        local xresources = pread("xrdb -query")
+        local xresources = pomodoro:spawn_sync('xrdb -query')
 
         local time_from_last_run       = xresources:match('awesome.Pomodoro.time:%s+%d+')
         local started_from_last_run    = xresources:match('awesome.Pomodoro.started:%s+%w+')
@@ -294,11 +301,12 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
             if restarting then
                 started_as_number = pomodoro.timer.started and 1 or 0
                 working_as_number = pomodoro.working and 1 or 0
-                pread('echo "awesome.Pomodoro.time: ' .. pomodoro.left
+                pomodoro:spawn_sync('echo "awesome.Pomodoro.time: ' .. pomodoro.left
                 .. '\nawesome.Pomodoro.started: ' .. started_as_number
                 .. '\nawesome.Pomodoro.working: ' .. working_as_number
                 .. '\nawesome.Pomodoro.npomodoros: ' .. pomodoro.npomodoros
                 .. '" | xrdb -merge')
+                fh:close()
             end
         end)
 

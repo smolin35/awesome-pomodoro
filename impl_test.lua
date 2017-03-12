@@ -137,7 +137,7 @@ end)
 
 describe('Preserve the pomodoro before restart if any', function()
     it('should find the last time in X resource DB', function()
-        awful.spawn.pread = function(s)
+        pomodoro.spawn_sync = function(s)
             return [[
             awesome.Pomodoro.time:  716
             XTerm*faceName: consolas
@@ -149,7 +149,7 @@ describe('Preserve the pomodoro before restart if any', function()
     end)
     it('should start the pomodoro right away if the value is found in the database after a restart and it was started', function()
         local s = spy.on(pomodoro, 'start')
-        awful.spawn.pread = function(s)
+        pomodoro.spawn_sync = function(s)
             return [[
             awesome.Pomodoro.time:  716
             awesome.Pomodoro.started:  1
@@ -162,7 +162,7 @@ describe('Preserve the pomodoro before restart if any', function()
     end)
     it('should use the normal duration and don\'t start a pomodoro if not found in the database', function()
         local s = spy.on(pomodoro, 'start')
-        awful.spawn.pread = function(s)
+        pomodoro.spawn_sync = function(s)
             return [[
             awesome.pomodoro.time:  716
             XTerm*faceName: consolas
@@ -176,7 +176,7 @@ describe('Preserve the pomodoro before restart if any', function()
 
     it('should not start the timer if it was paused or stopped', function()
         local s = spy.on(pomodoro, 'start')
-        awful.spawn.pread = function(s)
+        pomodoro.spawn_sync = function(s)
             return [[
             awesome.Pomodoro.time:  716
             awesome.Pomodoro.started:  0
