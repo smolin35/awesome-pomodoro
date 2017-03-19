@@ -59,12 +59,15 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
         local red   = beautiful.pomodoro_work or "#FF0000"
         local green = beautiful.pomodoro_pause  or "#00FF00"
 
-        if pomodoro.left then
+        if not pomodoro.is_running then
+            -- Color for when the timer has not yet started
+            color = beautiful.pomodoro_inactive or "#C0C0C0"
+        elseif pomodoro.left > 0 then
             -- Color for when the timer has been started
             color = pomodoro.fade_color(green, red)
         else
-            -- Color for when the timer has not yet started
-            color = beautiful.pomodoro_inactive or "#C0C0C0"
+            -- Color for when the timer has expired
+            color = red
         end
 
         color = string.format("fgcolor='%s'", color)
