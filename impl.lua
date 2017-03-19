@@ -265,13 +265,6 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
     end
 
     function pomodoro:init()
-        local xresources = pomodoro:spawn_sync('xrdb -query')
-
-        local time_from_last_run       = xresources:match('awesome.Pomodoro.time:%s+%d+')
-        local started_from_last_run    = xresources:match('awesome.Pomodoro.started:%s+%w+')
-        local working_from_last_run    = xresources:match('awesome.Pomodoro.working:%s+%w+')
-        local npomodoros_from_last_run = xresources:match('awesome.Pomodoro.npomodoros:%s+%d+')
-
         pomodoro.icon_widget:set_markup(pomodoro.format_icon())
 
         -- Timer configuration
@@ -297,7 +290,6 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
             }
         end)
 
-
         awesome.connect_signal("exit", function(restarting)
             -- Save current state in xrdb.
             -- run this synchronously cause otherwise it is not saved properly -.-
@@ -316,11 +308,17 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
         pomodoro.widget:buttons(get_buttons())
         pomodoro.icon_widget:buttons(get_buttons())
 
+        local xresources = pomodoro:spawn_sync('xrdb -query')
+
+        local time_from_last_run       = tonumber(xresources:match('awesome.Pomodoro.time:%s+(-?%d+)'))
+        local started_from_last_run    = tonumber(xresources:match('awesome.Pomodoro.started:%s+([01])'))
+        local working_from_last_run    = tonumber(xresources:match('awesome.Pomodoro.working:%s+([01])'))
+        local npomodoros_from_last_run = tonumber(xresources:match('awesome.Pomodoro.npomodoros:%s+(%d+)'))
+
         if time_from_last_run then
-            time_from_last_run = tonumber(time_from_last_run:match('%d+'))
-            if working_from_last_run then
-                pomodoro.working = (tonumber(working_from_last_run:match('%d+')) == 1)
-            end
+            -- if time_from_last_run is set, we assume all other xresources are set too
+            pomodoro.working = (working_from_last_run == 1)
+
             -- Use `math.min` to get the lower value for `pomodoro.left`, in
             -- case the config/setting has been changed.
             if pomodoro.working then
@@ -329,15 +327,9 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
                 pomodoro.left = math.min(time_from_last_run, pomodoro.pause_duration)
             end
 
-            if npomodoros_from_last_run then
-                pomodoro.npomodoros = tonumber(npomodoros_from_last_run:match('%d+'))
-            end
-
-            if started_from_last_run then
-                started_from_last_run = tonumber(started_from_last_run:match('%d+'))
-                if started_from_last_run == 1 then
-                    pomodoro:start()
-                end
+            pomodoro.npomodoros = npomodoros_from_last_run
+            if started_from_last_run == 1 then
+                pomodoro:start()
             end
         else
             -- Initial value depends on the one set by the user

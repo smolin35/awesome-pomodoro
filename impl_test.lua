@@ -147,6 +147,17 @@ describe('Preserve the pomodoro before restart if any', function()
         pomodoro:init()
         assert.are.equal(716, pomodoro.left)
     end)
+    it('should find the last time in X resource DB even if it is negative', function()
+        pomodoro.spawn_sync = function(s)
+            return [[
+            awesome.Pomodoro.time:  -716
+            XTerm*faceName: consolas
+            xterm*.background:      grey5
+            ]]
+        end
+        pomodoro:init()
+        assert.are.equal(-716, pomodoro.left)
+    end)
     it('should start the pomodoro right away if the value is found in the database after a restart and it was started', function()
         local s = spy.on(pomodoro, 'start')
         pomodoro.spawn_sync = function(s)
