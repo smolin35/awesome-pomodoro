@@ -64,11 +64,11 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
             -- Color for when the timer has not yet started
             color = beautiful.pomodoro_inactive or "#C0C0C0"
         elseif pomodoro.working then
-            local percent = math.max(pomodoro.left / pomodoro.work_duration, 0)
-            color = pomodoro.fade_color(green, red, percent)
+            local amount = 1 - math.max(pomodoro.left / pomodoro.work_duration, 0)
+            color = pomodoro.fade_color(green, red, amount)
         else
-            local percent = math.max(pomodoro.left / pomodoro.pause_duration, 0)
-            color = pomodoro.fade_color(red, green, percent)
+            local amount = 1 - math.max(pomodoro.left / pomodoro.pause_duration, 0)
+            color = pomodoro.fade_color(red, green, amount)
         end
 
         color = string.format("fgcolor='%s'", color)
@@ -88,17 +88,17 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
         return {r, g, b}
     end
 
-    function pomodoro.fade_color(color1, color2, percent)
+    function pomodoro.fade_color(color1, color2, amount)
         -- Return an interpolation of the color1 and color2
-        -- based on the ratio of left time and pause/work time
+        -- based on amount
 
         color1 = pomodoro.split_rgb(color1)
         color2 = pomodoro.split_rgb(color2)
-        local faded_color
 
-        faded_color = { math.floor(color1[1] - ((color1[1] - color2[1]) * percent)),
-                        math.floor(color1[2] - ((color1[2] - color2[2]) * percent)),
-                        math.floor(color1[3] - ((color1[3] - color2[3]) * percent)) }
+        local faded_color
+        faded_color = { math.floor(color1[1] - ((color1[1] - color2[1]) * amount)),
+                        math.floor(color1[2] - ((color1[2] - color2[2]) * amount)),
+                        math.floor(color1[3] - ((color1[3] - color2[3]) * amount)) }
 
         return string.format("#%02x%02x%02x", table.unpack(faded_color))
     end

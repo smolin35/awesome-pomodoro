@@ -215,3 +215,17 @@ describe('Long breaks', function()
     end)
 end)
 
+describe('Fade color', function()
+    local color1 = '#ff0000'
+    local color2 = '#00ff00'
+    it('should return the first color when amount is 0', function()
+        assert.are.equal(color1, pomodoro.fade_color(color1, color2, 0))
+    end)
+    it('should return the second color when amount is 1', function()
+        assert.are.equal(color2, pomodoro.fade_color(color1, color2, 1))
+    end)
+    it('should interpolate between two colors', function()
+        color3 = '#7f7f00'
+        assert.are.equal(color3, pomodoro.fade_color(color1, color2, 0.5))
+    end)
+end)
