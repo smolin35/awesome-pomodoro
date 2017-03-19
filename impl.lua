@@ -6,6 +6,7 @@ local io = require("io")
 local math = require("math")
 local os = require("os")
 local string = require("string")
+local table = require("table")
 
 module("pomodoro.impl")
 
@@ -64,7 +65,13 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
             color = beautiful.pomodoro_inactive or "#C0C0C0"
         elseif pomodoro.left > 0 then
             -- Color for when the timer has been started
-            color = pomodoro.fade_color(green, red)
+            if pomodoro.working then
+                local percent = pomodoro.left / pomodoro.work_duration
+                color = pomodoro.fade_color(green, red, percent)
+            else
+                local percent = pomodoro.left / pomodoro.pause_duration
+                color = pomodoro.fade_color(red, green, percent)
+            end
         else
             -- Color for when the timer has expired
             color = red
@@ -87,41 +94,19 @@ return function(wibox, awful, naughty, beautiful, timer, awesome, base)
         return {r, g, b}
     end
 
-    function pomodoro.fade_color(color1, color2)
+    function pomodoro.fade_color(color1, color2, percent)
         -- Return an interpolation of the color1 and color2
         -- based on the ratio of left time and pause/work time
 
         color1 = pomodoro.split_rgb(color1)
         color2 = pomodoro.split_rgb(color2)
-        local step
         local faded_color
 
-        if pomodoro.working then
-            step = pomodoro.left / pomodoro.work_duration
-            faded_color = {color1[1] - ((color1[1] - color2[1]) * step),
-                           color1[2] - ((color1[2] - color2[2]) * step),
-                           color1[3] - ((color1[3] - color2[3]) * step)
-                          }
-        else
-            step = pomodoro.left / pomodoro.pause_duration
-            faded_color = {color2[1] - ((color2[1] - color1[1]) * step),
-                           color2[2] - ((color2[2] - color1[2]) * step),
-                           color2[3] - ((color2[3] - color1[3]) * step)
-                          }
-        end
+        faded_color = { math.floor(color1[1] - ((color1[1] - color2[1]) * percent)),
+                        math.floor(color1[2] - ((color1[2] - color2[2]) * percent)),
+                        math.floor(color1[3] - ((color1[3] - color2[3]) * percent)) }
 
-        for i in ipairs(faded_color) do
-            local color = string.format("%x", math.floor(faded_color[i]))
-            if #color == 1 then
-                faded_color[i] = string.format("0%s", color)
-            else
-                faded_color[i] = color
-            end
-        end
-
-        return string.format("#%s%s%s", faded_color[1],
-                                     faded_color[2],
-                                     faded_color[3])
+        return string.format("#%02x%02x%02x", table.unpack(faded_color))
     end
 
     function pomodoro:settime(t)
