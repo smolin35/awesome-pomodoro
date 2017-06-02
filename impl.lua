@@ -55,7 +55,7 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
         if pomodoro.left then
             color = pomodoro.fade_color(green, red)
         else
-            color = beautiful.colors.white or "#FFFFFF"
+            color = beautiful.pomodoro_inactive or "#FFFFFF"
         end
 
         color = string.format("fgcolor='%s'", color)
