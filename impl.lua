@@ -1,15 +1,18 @@
+local module_path = (...):match ("(.+/)[^/]+$") or ""
+
 local ipairs = ipairs
 local tonumber = tonumber
 local io = require("io")
 local math = require("math")
 local os = require("os")
 local string = require("string")
+local table = require("table")
 
 module("pomodoro.impl")
 
-return function(wibox, awful, naughty, beautiful, timer, awesome)
+return function(wibox, awful, naughty, beautiful, timer, awesome, base)
     -- pomodoro timer widget
-    local pomodoro = {}
+    pomodoro = wibox.widget.base.make_widget()
     -- tweak these values in seconds to your liking
     pomodoro.short_pause_duration = 5 * 60
     pomodoro.long_pause_duration = 15 * 60
@@ -18,53 +21,60 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
     pomodoro.pause_duration = pomodoro.short_pause_duration
 
     pomodoro.change = 60
+    pomodoro.module_path = module_path
     pomodoro.changed = false
     pomodoro.changed_timer = timer({timeout = 3})
     pomodoro.changed_timer:connect_signal("timeout", function ()
         pomodoro.changed=false
         pomodoro.changed_timer:again()
         pomodoro.changed_timer:stop()
-        pomodoro.widget:set_text(pomodoro.format(pomodoro.work_duration))
+        pomodoro.widget:set_markup(pomodoro.format(pomodoro.work_duration))
+        pomodoro.icon_widget:set_markup(pomodoro.format_icon(pomodoro.work_duration))
     end)
-
 
     pomodoro.format = function (t)
         if pomodoro.changed or pomodoro.timer.started then
             return string.format("<span font='%s'>%s</span>", beautiful.font, t)
-        else return ""
+        else
+            return ""
         end
     end
+
+    pomodoro.format_icon = function (t)
+        return pomodoro.pomodoro_icon()
+    end
+
     pomodoro.pause_title = "Pause finished."
     pomodoro.pause_text = "Get back to work!"
     pomodoro.work_title = "Pomodoro finished."
     pomodoro.work_text = "Time for a pause!"
+    pomodoro.is_running = false
     pomodoro.working = true
+    pomodoro.auto_start_pomodoro = true
     pomodoro.widget = wibox.widget.textbox()
     pomodoro.icon_widget = wibox.widget.textbox()
     pomodoro.timer = timer { timeout = 1 }
 
-    -- Callbacks to be called when the pomodoro finishes or the rest time finishes
-    pomodoro.on_work_pomodoro_finish_callbacks = {}
-    pomodoro.on_pause_pomodoro_finish_callbacks = {}
-
-    function pomodoro.set_pomodoro_icon()
+    function pomodoro.pomodoro_icon()
         local color
-        local red = beautiful.pomodoro_start or "#FF0000"
-        local green = beautiful.pomodoro_end or "#00FF00"
+        local red   = beautiful.pomodoro_work or "#FF0000"
+        local green = beautiful.pomodoro_pause  or "#00FF00"
 
-        if pomodoro.left then
-            color = pomodoro.fade_color(green, red)
+        if not pomodoro.is_running then
+            -- Color for when the timer has not yet started
+            color = beautiful.pomodoro_inactive or "#C0C0C0"
+        elseif pomodoro.working then
+            local amount = 1 - math.max(pomodoro.left / pomodoro.work_duration, 0)
+            color = pomodoro.fade_color(green, red, amount)
         else
-            color = beautiful.pomodoro_inactive or "#FFFFFF"
+            local amount = 1 - math.max(pomodoro.left / pomodoro.pause_duration, 0)
+            color = pomodoro.fade_color(red, green, amount)
         end
 
         color = string.format("fgcolor='%s'", color)
         local font = "font='Noto Emoji 12'"
         local markup = "<span %s %s>&#127813;</span>"
-        markup = markup:format(color, font)
-        -- Uncomment to debug the markup
-        -- io.write(markup, "\n")
-        pomodoro.icon_widget:set_markup(markup)
+        return markup:format(color, font)
     end
 
     function pomodoro.split_rgb(color)
@@ -78,83 +88,89 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
         return {r, g, b}
     end
 
-    function pomodoro.fade_color(color1, color2)
+    function pomodoro.fade_color(color1, color2, amount)
         -- Return an interpolation of the color1 and color2
-        -- based on the ratio of left time and pause/work time
+        -- based on amount
 
         color1 = pomodoro.split_rgb(color1)
         color2 = pomodoro.split_rgb(color2)
-        local step
+
         local faded_color
+        faded_color = { math.floor(color1[1] - ((color1[1] - color2[1]) * amount)),
+                        math.floor(color1[2] - ((color1[2] - color2[2]) * amount)),
+                        math.floor(color1[3] - ((color1[3] - color2[3]) * amount)) }
 
-        if pomodoro.working then
-            step = pomodoro.left / pomodoro.work_duration
-            faded_color = {color1[1] - ((color1[1] - color2[1]) * step),
-                           color1[2] - ((color1[2] - color2[2]) * step),
-                           color1[3] - ((color1[3] - color2[3]) * step)
-                          }
-        else
-            step = pomodoro.left / pomodoro.pause_duration
-            faded_color = {color2[1] - ((color2[1] - color1[1]) * step),
-                           color2[2] - ((color2[2] - color1[2]) * step),
-                           color2[3] - ((color2[3] - color1[3]) * step)
-                          }
-        end
-
-        for i in ipairs(faded_color) do
-            local color = string.format("%x", math.floor(faded_color[i]))
-            if #color == 1 then
-                faded_color[i] = string.format("0%s", color)
-            else
-                faded_color[i] = color
-            end
-        end
-
-        return string.format("#%s%s%s", faded_color[1],
-                                     faded_color[2],
-                                     faded_color[3])
+        return string.format("#%02x%02x%02x", table.unpack(faded_color))
     end
 
     function pomodoro:settime(t)
+        s = ""
+        if t < 0 then
+            s = "-"
+            t = -t
+        end
         if t >= 3600 then
-            t = os.date("!%X", t)
+            t = os.date("!"..s.."%H:%M:%S", t)
         else
-            t = os.date("%M:%S", t)
+            t = os.date("!"..s.."%M:%S", t)
         end
         self.widget:set_markup(pomodoro.format(t))
     end
 
-    function pomodoro:notify(title, text, duration, working)
-        naughty.notify {
-            bg = beautiful.bg_urgent,
-            fg = beautiful.fg_urgent,
-            title = title,
-            text  = text,
-            timeout = 10
-        }
-
-        pomodoro.left = duration
-        pomodoro:settime(duration)
-        pomodoro.working = working
+    function pomodoro:start()
+        self.last_time = os.time()
+        self.is_running = true
+        self.timer:again()
+        if self.working then
+            self:emit_signal("work_start")
+        else
+            self:emit_signal("pause_start")
+        end
     end
 
-    function pomodoro.start()
-        pomodoro.last_time = os.time()
-        pomodoro.timer:again()
+    function pomodoro:toggle()
+        if pomodoro.left <= 0 then
+            self:stop()
+            if self.auto_start_pomodoro then
+                self:start()
+            end
+        else
+            if pomodoro.is_running then
+                self:pause()
+            else
+                self:start()
+            end
+        end
     end
 
-    function pomodoro.pause()
+    function pomodoro:pause()
         -- TODO: Fix the showed remaining text
+        pomodoro.is_running = false
         pomodoro.timer:stop()
-        pomodoro:set_pomodoro_icon()
+        pomodoro.icon_widget:set_markup(pomodoro.format_icon())
     end
 
     function pomodoro:stop()
+        pomodoro.is_running = false
         pomodoro.timer:stop()
-        pomodoro.working = true
-        pomodoro.left = pomodoro.work_duration
-        pomodoro:settime(pomodoro.work_duration)
-        pomodoro:set_pomodoro_icon()
+
+        if self.working then
+            self:emit_signal("work_stop", self.left)
+            self.npomodoros = self.npomodoros + 1
+            self.working = false
+            if self.npomodoros % 4 == 0 then
+                self.pause_duration = self.long_pause_duration
+            else
+                self.pause_duration = self.short_pause_duration
+            end
+            self.left = self.pause_duration
+        else
+            self:emit_signal("pause_stop", self.left)
+            self.working = true
+            self.left = self.work_duration
+        end
+        self:settime(self.left)
+        self.icon_widget:set_markup(pomodoro.format_icon())
     end
 
     function pomodoro:increase_time()
@@ -200,32 +216,15 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
     end
 
     function pomodoro:ticking_time()
-        if pomodoro.left > 0 then
-            pomodoro:settime(pomodoro.left)
-        else
+        if pomodoro.left == 0 then
             if pomodoro.working then
-                pomodoro.npomodoros = pomodoro.npomodoros + 1
-                pomodoro.working = false
-                if pomodoro.npomodoros % 4 == 0 then
-                    pomodoro.pause_duration = pomodoro.long_pause_duration
-                else
-                    pomodoro.pause_duration = pomodoro.short_pause_duration
-                end
-                pomodoro:notify(pomodoro.work_title, pomodoro.work_text,
-                pomodoro.pause_duration, false)
-                for _, value in ipairs(pomodoro.on_work_pomodoro_finish_callbacks) do
-                    value()
-                end
+                self:emit_signal("work_elapsed")
             else
-                pomodoro:notify(pomodoro.pause_title, pomodoro.pause_text,
-                pomodoro.work_duration, true)
-                for _, value in ipairs(pomodoro.on_pause_pomodoro_finish_callbacks) do
-                    value()
-                end
+                self:emit_signal("pause_elapsed")
             end
-            pomodoro.timer:stop()
         end
-        pomodoro:set_pomodoro_icon()
+        pomodoro:settime(pomodoro.left)
+        pomodoro.icon_widget:set_markup(pomodoro.format_icon())
     end
 
     -- Function that keeps the logic for ticking
@@ -236,19 +235,39 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
         pomodoro:ticking_time()
     end
 
-    function pomodoro:init()
-        local p = io.popen("xrdb -query")
-        local xresources = p:read("*all")
-        local time_from_last_run = xresources:match('awesome.Pomodoro.time:%s+%d+')
-        local started_from_last_run = xresources:match('awesome.Pomodoro.started:%s+%w+')
-        local working_from_last_run = xresources:match('awesome.Pomodoro.working:%s+%w+')
-        local npomodoros_from_last_run = xresources:match('awesome.Pomodoro.npomodoros:%s+%d+')
+    function pomodoro:spawn_sync(cmd)
+        local fh = io.popen(cmd, 'r')
+        local stdout = fh:read('*all')
+        fh:close()
+        io.write('spawn_orig')
+        return stdout
+    end
 
-        pomodoro:set_pomodoro_icon()
+    function pomodoro:init()
+        pomodoro.icon_widget:set_markup(pomodoro.format_icon())
 
         -- Timer configuration
-        --
         pomodoro.timer:connect_signal("timeout", pomodoro.ticking)
+
+        -- Notifications
+        pomodoro:connect_signal("work_elapsed", function()
+            naughty.notify {
+                bg = beautiful.bg_urgent,
+                fg = beautiful.fg_urgent,
+                title = pomodoro.work_title,
+                text  = pomodoro.work_text,
+                timeout = 10
+            }
+        end)
+        pomodoro:connect_signal("pause_elapsed", function()
+            naughty.notify {
+                bg = beautiful.bg_urgent,
+                fg = beautiful.fg_urgent,
+                title = pomodoro.pause_title,
+                text  = pomodoro.pause_text,
+                timeout = 10
+            }
+        end)
 
         awesome.connect_signal("exit", function(restarting)
             -- Save current state in xrdb.
@@ -256,22 +275,29 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
             if restarting then
                 started_as_number = pomodoro.timer.started and 1 or 0
                 working_as_number = pomodoro.working and 1 or 0
-                awful.spawn.with_shell('echo "awesome.Pomodoro.time: ' .. pomodoro.left
+                pomodoro:spawn_sync('echo "awesome.Pomodoro.time: ' .. pomodoro.left
                 .. '\nawesome.Pomodoro.started: ' .. started_as_number
                 .. '\nawesome.Pomodoro.working: ' .. working_as_number
                 .. '\nawesome.Pomodoro.npomodoros: ' .. pomodoro.npomodoros
                 .. '" | xrdb -merge')
+                fh:close()
             end
         end)
 
         pomodoro.widget:buttons(get_buttons())
         pomodoro.icon_widget:buttons(get_buttons())
 
+        local xresources = pomodoro:spawn_sync('xrdb -query')
+
+        local time_from_last_run       = tonumber(xresources:match('awesome.Pomodoro.time:%s+(-?%d+)'))
+        local started_from_last_run    = tonumber(xresources:match('awesome.Pomodoro.started:%s+([01])'))
+        local working_from_last_run    = tonumber(xresources:match('awesome.Pomodoro.working:%s+([01])'))
+        local npomodoros_from_last_run = tonumber(xresources:match('awesome.Pomodoro.npomodoros:%s+(%d+)'))
+
         if time_from_last_run then
-            time_from_last_run = tonumber(time_from_last_run:match('%d+'))
-            if working_from_last_run then
-                pomodoro.working = (tonumber(working_from_last_run:match('%d+')) == 1)
-            end
+            -- if time_from_last_run is set, we assume all other xresources are set too
+            pomodoro.working = (working_from_last_run == 1)
+
             -- Use `math.min` to get the lower value for `pomodoro.left`, in
             -- case the config/setting has been changed.
             if pomodoro.working then
@@ -280,15 +306,9 @@ return function(wibox, awful, naughty, beautiful, timer, awesome)
                 pomodoro.left = math.min(time_from_last_run, pomodoro.pause_duration)
             end
 
-            if npomodoros_from_last_run then
-                pomodoro.npomodoros = tonumber(npomodoros_from_last_run:match('%d+'))
-            end
-
-            if started_from_last_run then
-                started_from_last_run = tonumber(started_from_last_run:match('%d+'))
-                if started_from_last_run == 1 then
-                    pomodoro:start()
-                end
+            pomodoro.npomodoros = npomodoros_from_last_run
+            if started_from_last_run == 1 then
+                pomodoro:start()
             end
         else
             -- Initial value depends on the one set by the user
