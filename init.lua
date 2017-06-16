@@ -6,17 +6,10 @@ local wibox = require("wibox")
 
 
 local function format_time(seconds)
-    local h, m, s
-
-    s = seconds % 60
-    m = math.floor(seconds / 60)
-    h = math.floor(m / 60)
-
-    if h > 0 then
-	m = m - (h * 60)
-	return string.format("%dh%dm%ds", h, m, s)
+    if seconds >= 3600 then
+	return os.date("!%H:%M:%S", seconds)
     else
-	return string.format("%dm%ds", m, s)
+	return os.date("!%M:%S", seconds)
     end
 end
 
@@ -151,7 +144,7 @@ end
 
 
 function Pomodoro:update_timer_widget(t)
-    local markup, s, out
+    local markup, s
 
     if t < 0 then
 	s = "-"
@@ -160,14 +153,8 @@ function Pomodoro:update_timer_widget(t)
 	s = ""
     end
 
-    if t >= 3600 then
-	out = os.date("!"..s.."%H:%M:%S", t)
-    else
-	out = os.date("!"..s.."%M:%S", t)
-    end
-
     if self.config.always_show_timer or self.changed or self.timer.started then
-	markup = out
+	markup = s .. format_time(t)
     else
 	markup = ""
     end
@@ -323,7 +310,7 @@ function Pomodoro.handlers.ticking(self)
     end
 
     self:update_timer_widget(self.time_left)
-    self.icon_widget:set_markup(self:format_icon())
+    self:update_icon_widget()
 end
 
 
