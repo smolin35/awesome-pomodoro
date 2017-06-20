@@ -138,9 +138,8 @@ function Pomodoro:update_icon_widget()
 	color = Pomodoro.fade_color(work_color, pause_color, amount)
     end
 
-    color = string.format("fgcolor='%s'", color)
-    local markup = "<span %s>&#127813;</span>"
-    return markup:format(color)
+    local markup = "<span fgcolor='%s'>&#127813;</span>"
+    self.icon_widget:set_markup(markup:format(color))
 end
 
 
@@ -314,10 +313,18 @@ function Pomodoro.handlers.ticking(self)
 end
 
 
-function Pomodoro.init()
+function Pomodoro.init(config)
     -- Return a new Pomodoro object
 
     local self = setmetatable({}, Pomodoro)
+
+    if config and type(config) == "table" then
+       for k, v in pairs(config) do
+	  if self.config[k] ~= nil then
+	     self.config[k] = v
+	  end
+       end
+    end
 
     -- We'll try to grab the values from the last pomodoro session
     local last_run = self:load_xresources_values()
@@ -388,5 +395,5 @@ function Pomodoro.init()
 end
 
 Pomodoro.__index = Pomodoro
-setmetatable(Pomodoro, {__call = function(cls, ...) return cls.init(...) end})
+setmetatable(Pomodoro, {__call = function(cls, config) return cls.init(config) end})
 return Pomodoro
