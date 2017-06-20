@@ -36,6 +36,8 @@ Pomodoro.config = {
     work_title = "Pomodoro finished.",
     work_text = "Time for a pause!",
 
+    collected_text = 'Collected %d pomodoros so far.\n',
+
     auto_start_pomodoro = true,
 
     allow_timer_over_duration = true,
@@ -99,8 +101,7 @@ end
 
 
 function Pomodoro:make_tooltip()
-   local collected = 'Collected %d pomodoros so far.\n'
-   collected = collected:format(self.npomodoros)
+   local collected = self.config.collected_text:format(self.npomodoros)
 
    local settings = "Settings:\n * work: %s\n * short pause: %s\n * long pause: %s"
    settings = settings:format(format_time(self.config.work_duration),
