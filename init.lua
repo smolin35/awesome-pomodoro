@@ -355,8 +355,7 @@ function Pomodoro.init(config)
     self.changed = false
     self.changed_timer = timer({timeout = 3})
     self.changed_timer:connect_signal("timeout", function ()
-					 self.handlers.changed_timer(self)
-    end)
+					 self.handlers.changed_timer(self) end)
 
     self.timer_widget = wibox.widget.textbox()
     self.icon_widget = wibox.widget.textbox()
