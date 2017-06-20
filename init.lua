@@ -122,7 +122,7 @@ function Pomodoro:make_tooltip()
 end
 
 
-function Pomodoro:format_icon()
+function Pomodoro:update_icon_widget()
     local color
     local work_color  = beautiful.pomodoro_work   or "#FF0000"
     local pause_color = beautiful.pomodoro_pause  or "#00FF00"
@@ -196,11 +196,11 @@ function Pomodoro:pause()
     -- TODO: Fix the showed remaining text
     self.is_running = false
 
-    if self.timer.started then 
+    if self.timer.started then
 	self.timer:stop()
     end
 
-    self.icon_widget:set_markup(self:format_icon())
+    self:update_icon_widget()
 end
 
 
@@ -227,7 +227,7 @@ function Pomodoro:stop()
 	self.time_left = self.config.work_duration
     end
     self:update_timer_widget(self.time_left)
-    self.icon_widget:set_markup(self:format_icon())
+    self:update_icon_widget()
 end
 
 
@@ -271,8 +271,7 @@ function Pomodoro.handlers.changed_timer(self)
    self.changed = false
    self.changed_timer:again()
    self.changed_timer:stop()
-   self.timer_widget:set_markup(self:format(self.config.work_duration))
-   self.icon_widget:set_markup(self:format_icon(self.config.work_duration))
+   self.timer_widget:set_markup(format_time(self.config.work_duration))
 end
 
 
@@ -354,7 +353,7 @@ function Pomodoro.init()
 
     self.timer_widget = wibox.widget.textbox()
     self.icon_widget = wibox.widget.textbox()
-    self.icon_widget:set_markup(self:format_icon())
+    self:update_icon_widget()
 
     -- Timer configuration
     self.timer = timer {timeout = 1}
