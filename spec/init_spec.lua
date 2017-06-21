@@ -10,7 +10,7 @@ describe("Should set the default", function()
     local pomodoro = Pomodoro()
 
     it('pause duration to 5 minutes', function()
-        assert.are.equal(300, pomodoro.config.pause_duration)
+        assert.are.equal(300, pomodoro.config.short_pause_duration)
     end)
     it('work duration to 25 minutes', function()
         assert.are.equal(1500, pomodoro.config.work_duration)
@@ -170,7 +170,7 @@ describe('Long breaks', function()
         for i=1,4,1 do
             pomodoro.working = true
             pomodoro.left = 0
-            assert.are.not_equal(15 * 60, pomodoro.config.pause_duration)
+            assert.are.not_equal(15 * 60, pomodoro.config.short_pause_duration)
             pomodoro:stop()
         end
         assert.are.equal(15 * 60, pomodoro.config.long_pause_duration)
