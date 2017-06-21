@@ -134,7 +134,7 @@ function Pomodoro:update_icon_widget()
 	local amount = 1 - math.max(self.time_left / self.config.work_duration, 0)
 	color = Pomodoro.fade_color(pause_color, work_color, amount)
     else
-	local amount = 1 - math.max(self.time_left / self.config.pause_duration, 0)
+	local amount = math.max(1 - self.time_left / self.config.pause_duration, 0)
 	color = Pomodoro.fade_color(work_color, pause_color, amount)
     end
 
