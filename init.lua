@@ -40,7 +40,7 @@ Pomodoro.config = {
 
     auto_start_pomodoro = true,
 
-    allow_timer_over_duration = true,
+    allow_timer_beyond_duration = true,
 
     always_show_timer = true;
 
@@ -49,7 +49,6 @@ Pomodoro.config = {
     short_pause_duration = 5 * 60,
     long_pause_duration = 15 * 60,
     work_duration = 25 * 60,
-    pause_duration = 5 * 60,
 }
 
 
@@ -105,7 +104,7 @@ function Pomodoro:make_tooltip()
 
    local settings = "Settings:\n * work: %s\n * short pause: %s\n * long pause: %s"
    settings = settings:format(format_time(self.config.work_duration),
-			      format_time(self.config.pause_duration),
+			      format_time(self.config.short_pause_duration),
 			      format_time(self.config.long_pause_duration))
 
    if self.timer.started then
@@ -134,7 +133,7 @@ function Pomodoro:update_icon_widget()
 	local amount = 1 - math.max(self.time_left / self.config.work_duration, 0)
 	color = Pomodoro.fade_color(pause_color, work_color, amount)
     else
-	local amount = math.max(1 - self.time_left / self.config.pause_duration, 0)
+	local amount = math.max(1 - self.time_left / self.config.short_pause_duration, 0)
 	color = Pomodoro.fade_color(work_color, pause_color, amount)
     end
 
