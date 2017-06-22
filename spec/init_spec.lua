@@ -167,7 +167,7 @@ end)
 describe('Long breaks', function()
     local pomodoro = Pomodoro()
     it('should properly start a long break after 4 full pomodoros', function()
-        for i=1,4,1 do
+        for _ = 1, 4 do
             pomodoro.working = true
             pomodoro.left = 0
             assert.are.not_equal(15 * 60, pomodoro.config.short_pause_duration)
@@ -188,7 +188,7 @@ describe('Fade color', function()
         assert.are.equal(color2, pomodoro.fade_color(color1, color2, 1))
     end)
     it('should interpolate between two colors', function()
-        color3 = '#7f7f00'
+        local color3 = '#7f7f00'
         assert.are.equal(color3, pomodoro.fade_color(color1, color2, 0.5))
     end)
 end)
