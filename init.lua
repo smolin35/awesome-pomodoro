@@ -329,26 +329,14 @@ function Pomodoro.init(config)
     local last_run = self:load_xresources_values()
 
     self.is_running = false
-    self.npomodoros = last_run.pomodoros or 0
 
-    if last_run.working then
-       self.working = last_run.working
-    else
-       self.working = true
-    end
+    self.npomodoros = last_run.npomodoros or 0
+    self.working = last_run.working or true
 
     if last_run.started ~= nil then
-	self.time_left = last_run.time
+       self.time_left = last_run.time
     else
-	if last_run.working then
-	    self.time_left = self.config.work_duration
-	else
-	    if last_run.npomodoros and last_run.npomodoros % 4 then
-		self.time_left = self.config.long_pause_duration
-	    else
-		self.time_left = self.config.short_pause_duration
-	    end
-	end
+       self.time_left = self.config.work_duration
     end
 
     self.changed = false
