@@ -30,11 +30,11 @@ end
 local Pomodoro = {}
 
 Pomodoro.config = {
-    pause_title = "Pause finished.",
-    pause_text = "Get back to work!",
+    break_title = "Break time over.",
+    break_text = "Get back to work!",
 
     work_title = "Pomodoro finished.",
-    work_text = "Time for a pause!",
+    work_text = "Time for a break!",
 
     collected_text = 'Collected %d pomodoros so far.\n',
 
@@ -46,8 +46,8 @@ Pomodoro.config = {
 
     change_step = 60,
 
-    short_pause_duration = 5 * 60,
-    long_pause_duration = 15 * 60,
+    short_break_duration = 5 * 60,
+    long_break_duration = 15 * 60,
     work_duration = 25 * 60,
 }
 
@@ -102,10 +102,10 @@ end
 function Pomodoro:make_tooltip()
    local collected = self.config.collected_text:format(self.npomodoros)
 
-   local settings = "Settings:\n * work: %s\n * short pause: %s\n * long pause: %s"
+   local settings = "Settings:\n * work: %s\n * short break: %s\n * long break: %s"
    settings = settings:format(format_time(self.config.work_duration),
-			      format_time(self.config.short_pause_duration),
-			      format_time(self.config.long_pause_duration))
+                             format_time(self.config.short_break_duration),
+                             format_time(self.config.long_break_duration))
 
    if self.timer.started then
       if self.working then
@@ -124,17 +124,17 @@ end
 function Pomodoro:update_icon_widget()
     local color
     local work_color  = beautiful.pomodoro_work   or "#FF0000"
-    local pause_color = beautiful.pomodoro_pause  or "#00FF00"
+    local break_color = beautiful.pomodoro_break  or "#00FF00"
 
     if not self.is_running then
 	-- Color for when the timer has not yet started
 	color = beautiful.pomodoro_inactive or "#C0C0C0"
     elseif self.working then
 	local amount = 1 - math.max(self.time_left / self.config.work_duration, 0)
-	color = Pomodoro.fade_color(pause_color, work_color, amount)
+	color = Pomodoro.fade_color(break_color, work_color, amount)
     else
-	local amount = math.max(1 - self.time_left / self.config.short_pause_duration, 0)
-	color = Pomodoro.fade_color(work_color, pause_color, amount)
+	local amount = math.max(1 - self.time_left / self.config.short_break_duration, 0)
+	color = Pomodoro.fade_color(work_color, break_color, amount)
     end
 
     local markup = "<span fgcolor='%s'>&#127813;</span>"
@@ -169,7 +169,7 @@ function Pomodoro:start()
     if self.working then
 	self.icon_widget:emit_signal("work_start")
     else
-	self.icon_widget:emit_signal("pause_start")
+	self.icon_widget:emit_signal("break_start")
     end
 end
 
@@ -214,13 +214,13 @@ function Pomodoro:stop()
 	self.npomodoros = self.npomodoros + 1
 
 	if self.npomodoros % 4 == 0 then
-	    self.time_left = self.config.long_pause_duration
+	    self.time_left = self.config.long_break_duration
 	else
-	    self.time_left = self.config.short_pause_duration
+	    self.time_left = self.config.short_break_duration
 	end
 
     else
-	self.icon_widget:emit_signal("pause_stop", self.time_left)
+	self.icon_widget:emit_signal("break_stop", self.time_left)
 	self.working = true
 	self.time_left = self.config.work_duration
     end
@@ -303,7 +303,7 @@ function Pomodoro.handlers.ticking(self)
 	if self.working then
 	    self.icon_widget:emit_signal("work_elapsed")
 	else
-	    self.icon_widget:emit_signal("pause_elapsed")
+	    self.icon_widget:emit_signal("break_elapsed")
 	end
     end
 
@@ -357,9 +357,9 @@ function Pomodoro.init(config)
 					self.notify(self.config.work_title,
 						    self.config.work_text) end)
 
-    self.icon_widget:connect_signal("pause_elapsed", function()
-					self.notify(self.config.pause_title,
-						    self.config.pause_text) end)
+    self.icon_widget:connect_signal("break_elapsed", function()
+					self.notify(self.config.break_title,
+						    self.config.break_text) end)
 
     self.icon_widget:connect_signal("exit", function(restart)
 					self.handlers.exit(self, restart) end)
