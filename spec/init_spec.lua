@@ -29,12 +29,12 @@ describe('The timer widget should display', function()
     local s = spy.on(pomodoro.timer_widget, "set_markup")
 
     it('the time in H:M:S format when the left time is greater than an hour', function()
-	pomodoro.changed = true
+        pomodoro.changed = true
         pomodoro:update_timer_widget(3601)
         assert.spy(s).was_called_with(pomodoro.timer_widget, "01:00:01")
     end)
     it('the time in M:S format when the left time is less than an hour', function()
-	pomodoro.changed = true
+        pomodoro.changed = true
         pomodoro:update_timer_widget(1500)
         assert.spy(s).was_called_with(pomodoro.timer_widget, "25:00")
     end)
@@ -53,7 +53,7 @@ end)
 describe('Stopping a pomodoro', function()
     local pomodoro = Pomodoro()
     it('should stop the timer', function()
-	pomodoro.timer.started = true
+        pomodoro.timer.started = true
         local s = spy.on(pomodoro.timer, 'stop')
         pomodoro:stop()
         assert.spy(s).was_called_with(pomodoro.timer)
@@ -70,14 +70,14 @@ describe('Stopping a pomodoro', function()
         assert.are.equal(working, pomodoro.working)
     end)
     it('in work mode should trigger pause mode and change time accordingly', function()
-	pomodoro.working = true
+        pomodoro.working = true
         pomodoro:stop()
         assert.False(pomodoro.working)
         assert.False(pomodoro.npomodoros % 4 == 0)
         assert.are.equal(pomodoro.config.short_pause_duration, pomodoro.time_left)
     end)
     it('in pause mode should trigger work mode and change time accordingly', function()
-	pomodoro.working = false
+        pomodoro.working = false
         local s = spy.on(pomodoro, 'update_timer_widget')
         pomodoro:stop()
         assert.are.equal(pomodoro.config.work_duration, pomodoro.time_left)
@@ -87,8 +87,8 @@ end)
 
 describe('Pausing a pomodoro', function()
     it('should stop the timer', function()
-	local pomodoro = Pomodoro()
-	pomodoro.timer.started = true
+        local pomodoro = Pomodoro()
+        pomodoro.timer.started = true
         local s = spy.on(pomodoro.timer, 'stop')
         pomodoro:pause()
         assert.spy(s).was_called_with(pomodoro.timer)
@@ -97,16 +97,16 @@ end)
 
 describe('Preserving pomodoros between restarts', function()
     it('should preserve the last remaining time in the XRDB', function()
-	Pomodoro.spawn_sync = function()
-	    return [[
-	    awesome.Pomodoro.time:  716
+        Pomodoro.spawn_sync = function()
+            return [[
+            awesome.Pomodoro.time:  716
             awesome.Pomodoro.started:  0
             awesome.Pomodoro.working: 1
-	    XTerm*faceName: consolas
-	    xterm*.background:      grey5
-	    ]]
-	  end
-	local pomodoro = Pomodoro()
+            XTerm*faceName: consolas
+            xterm*.background:      grey5
+            ]]
+        end
+        local pomodoro = Pomodoro()
         assert.are.equal(716, pomodoro.time_left)
     end)
     it('should preserve the last remaining time in the XRDB, even if it is negative', function()
@@ -118,7 +118,7 @@ describe('Preserving pomodoros between restarts', function()
             xterm*.background:      grey5
             ]]
         end
-	local pomodoro = Pomodoro()
+        local pomodoro = Pomodoro()
         assert.are.equal(-716, pomodoro.time_left)
     end)
     it('should start the pomodoro right away if it was started in the previous session', function()
@@ -130,7 +130,7 @@ describe('Preserving pomodoros between restarts', function()
             xterm*.background:      grey5
             ]]
         end
-	local pomodoro = Pomodoro()
+        local pomodoro = Pomodoro()
         local s = spy.on(pomodoro, 'start')
     end)
     it('should use the normal duration and don\'t start a pomodoro if not found in the database', function()
@@ -142,7 +142,7 @@ describe('Preserving pomodoros between restarts', function()
             xterm*.background:      grey5
             ]]
         end
-	local pomodoro = Pomodoro()
+        local pomodoro = Pomodoro()
         local s = spy.on(pomodoro, 'start')
         assert.spy(s).was_not_called()
         assert.are.equal(1500, pomodoro.time_left)
@@ -157,7 +157,7 @@ describe('Preserving pomodoros between restarts', function()
             xterm*.background:      grey5
             ]]
         end
-	local pomodoro = Pomodoro()
+        local pomodoro = Pomodoro()
         local s = spy.on(pomodoro, 'start')
         assert.spy(s).was_not_called()
         assert.are.equal(716, pomodoro.time_left)

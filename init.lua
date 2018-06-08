@@ -7,9 +7,9 @@ local wibox = require("wibox")
 
 local function format_time(seconds)
     if seconds >= 3600 then
-	return os.date("!%H:%M:%S", seconds)
+        return os.date("!%H:%M:%S", seconds)
     else
-	return os.date("!%M:%S", seconds)
+        return os.date("!%M:%S", seconds)
     end
 end
 
@@ -64,21 +64,21 @@ end
 
 function Pomodoro.notify(title, text)
     naughty.notify({
-	bg = beautiful.bg_urgent,
-	fg = beautiful.fg_urgent,
-	title = title,
-	text  = text,
-	timeout = 10})
+        bg = beautiful.bg_urgent,
+        fg = beautiful.fg_urgent,
+        title = title,
+        text  = text,
+        timeout = 10})
 end
 
 
 function Pomodoro:load_xresources_values()
     local xresources = self.spawn_sync('xrdb -query')
     local last_run = {
-	time = tonumber(xresources:match('awesome.Pomodoro.time:%s+(-?%d+)')),
-	started = tonumber(xresources:match('awesome.Pomodoro.started:%s+([01])')),
-	working = tonumber(xresources:match('awesome.Pomodoro.working:%s+([01])')),
-	pomodoros = tonumber(xresources:match('awesome.Pomodoro.npomodoros:%s+(%d+)'))
+        time = tonumber(xresources:match('awesome.Pomodoro.time:%s+(-?%d+)')),
+        started = tonumber(xresources:match('awesome.Pomodoro.started:%s+([01])')),
+        working = tonumber(xresources:match('awesome.Pomodoro.working:%s+([01])')),
+        pomodoros = tonumber(xresources:match('awesome.Pomodoro.npomodoros:%s+(%d+)'))
     }
     return last_run
 end
@@ -100,24 +100,24 @@ end
 
 
 function Pomodoro:make_tooltip()
-   local collected = self.config.collected_text:format(self.npomodoros)
+    local collected = self.config.collected_text:format(self.npomodoros)
 
-   local settings = "Settings:\n * work: %s\n * short break: %s\n * long break: %s"
-   settings = settings:format(format_time(self.config.work_duration),
-                             format_time(self.config.short_break_duration),
-                             format_time(self.config.long_break_duration))
+    local settings = "Settings:\n * work: %s\n * short break: %s\n * long break: %s"
+    settings = settings:format(format_time(self.config.work_duration),
+                               format_time(self.config.short_break_duration),
+                               format_time(self.config.long_break_duration))
 
-   if self.timer.started then
-      if self.working then
-	 return collected .. 'Work ending in ' .. os.date("%M:%S", self.time_left)
-      else
-	 return collected .. 'Rest ending in ' .. os.date("%M:%S", self.time_left)
-      end
-   else
-      return string.format("%s\nPomodoro not started\n\n%s",
-			   collected,
-			   settings)
-   end
+    if self.timer.started then
+        if self.working then
+            return collected .. 'Work ending in ' .. os.date("%M:%S", self.time_left)
+        else
+            return collected .. 'Rest ending in ' .. os.date("%M:%S", self.time_left)
+        end
+    else
+        return string.format("%s\nPomodoro not started\n\n%s",
+                             collected,
+                             settings)
+    end
 end
 
 
@@ -127,14 +127,14 @@ function Pomodoro:update_icon_widget()
     local break_color = beautiful.pomodoro_break  or "#00FF00"
 
     if not self.is_running then
-	-- Color for when the timer has not yet started
-	color = beautiful.pomodoro_inactive or "#C0C0C0"
+        -- Color for when the timer has not yet started
+        color = beautiful.pomodoro_inactive or "#C0C0C0"
     elseif self.working then
-	local amount = 1 - math.max(self.time_left / self.config.work_duration, 0)
-	color = Pomodoro.fade_color(break_color, work_color, amount)
+        local amount = 1 - math.max(self.time_left / self.config.work_duration, 0)
+        color = Pomodoro.fade_color(break_color, work_color, amount)
     else
-	local amount = math.max(1 - self.time_left / self.config.short_break_duration, 0)
-	color = Pomodoro.fade_color(work_color, break_color, amount)
+        local amount = math.max(1 - self.time_left / self.config.short_break_duration, 0)
+        color = Pomodoro.fade_color(work_color, break_color, amount)
     end
 
     local markup = "<span fgcolor='%s'>&#127813;</span>"
@@ -146,16 +146,16 @@ function Pomodoro:update_timer_widget(t)
     local markup, s
 
     if t < 0 then
-	s = "-"
-	t = -t
+        s = "-"
+        t = -t
     else
-	s = ""
+        s = ""
     end
 
     if self.config.always_show_timer or self.changed or self.timer.started then
-	markup = s .. format_time(t)
+        markup = s .. format_time(t)
     else
-	markup = ""
+        markup = ""
     end
 
     self.timer_widget:set_markup(markup)
@@ -167,25 +167,25 @@ function Pomodoro:start()
     self.is_running = true
     self.timer:again()
     if self.working then
-	self.icon_widget:emit_signal("work_start")
+        self.icon_widget:emit_signal("work_start")
     else
-	self.icon_widget:emit_signal("break_start")
+        self.icon_widget:emit_signal("break_start")
     end
 end
 
 
 function Pomodoro:toggle()
     if self.time_left <= 0 then
-	self:stop()
-	if self.auto_start_pomodoro then
-	    self:start()
-	end
+        self:stop()
+        if self.auto_start_pomodoro then
+            self:start()
+        end
     else
-	if self.is_running then
-	    self:pause()
-	else
-	    self:start()
-	end
+        if self.is_running then
+            self:pause()
+        else
+            self:start()
+        end
     end
 end
 
@@ -195,7 +195,7 @@ function Pomodoro:pause()
     self.is_running = false
 
     if self.timer.started then
-	self.timer:stop()
+        self.timer:stop()
     end
 
     self:update_icon_widget()
@@ -204,25 +204,25 @@ end
 
 function Pomodoro:stop()
     if self.timer.started then
-	self.timer:stop()
+        self.timer:stop()
     end
 
     if self.working then
-	self.icon_widget:emit_signal("work_stop", self.time_left)
-	self.working = false
+        self.icon_widget:emit_signal("work_stop", self.time_left)
+        self.working = false
 
-	self.npomodoros = self.npomodoros + 1
+        self.npomodoros = self.npomodoros + 1
 
-	if self.npomodoros % 4 == 0 then
-	    self.time_left = self.config.long_break_duration
-	else
-	    self.time_left = self.config.short_break_duration
-	end
+        if self.npomodoros % 4 == 0 then
+            self.time_left = self.config.long_break_duration
+        else
+            self.time_left = self.config.short_break_duration
+        end
 
     else
-	self.icon_widget:emit_signal("break_stop", self.time_left)
-	self.working = true
-	self.time_left = self.config.work_duration
+        self.icon_widget:emit_signal("break_stop", self.time_left)
+        self.working = true
+        self.time_left = self.config.work_duration
     end
     self:update_timer_widget(self.time_left)
     self:update_icon_widget()
@@ -236,15 +236,15 @@ function Pomodoro:modify_time(add)
     self.changed = true
 
     if add then
-	self:update_timer_widget(self.config.work_duration + self.config.change_step)
-	self.config.work_duration = self.config.work_duration + self.config.change_step
-	self.time_left = self.config.work_duration
+        self:update_timer_widget(self.config.work_duration + self.config.change_step)
+        self.config.work_duration = self.config.work_duration + self.config.change_step
+        self.time_left = self.config.work_duration
     else
-	if self.config.work_duration > self.config.change_step then
-	    self:update_timer_widget(self.config.work_duration - self.config.change_step)
-	    self.config.work_duration = self.config.work_duration - self.config.change_step
-	    self.time_left = self.config.work_duration
-	end
+        if self.config.work_duration > self.config.change_step then
+            self:update_timer_widget(self.config.work_duration - self.config.change_step)
+            self.config.work_duration = self.config.work_duration - self.config.change_step
+            self.time_left = self.config.work_duration
+        end
     end
     self.changed_timer:again()
 end
@@ -252,11 +252,11 @@ end
 
 function Pomodoro:get_buttons()
     return awful.util.table.join(
-    awful.button({ }, 1, function() self:start() end),
-    awful.button({ }, 2, function() self:pause() end),
-    awful.button({ }, 3, function() self:stop() end),
-    awful.button({ }, 4, function() self:modify_time(true) end),
-    awful.button({ }, 5, function() self:modify_time(false) end)
+        awful.button({ }, 1, function() self:start() end),
+        awful.button({ }, 2, function() self:pause() end),
+        awful.button({ }, 3, function() self:stop() end),
+        awful.button({ }, 4, function() self:modify_time(true) end),
+        awful.button({ }, 5, function() self:modify_time(false) end)
     )
 end
 
@@ -266,25 +266,25 @@ Pomodoro.handlers = {}
 
 
 function Pomodoro.handlers.changed_timer(self)
-   self.changed = false
-   self.changed_timer:again()
-   self.changed_timer:stop()
-   self.timer_widget:set_markup(format_time(self.config.work_duration))
+    self.changed = false
+    self.changed_timer:again()
+    self.changed_timer:stop()
+    self.timer_widget:set_markup(format_time(self.config.work_duration))
 end
 
 
 function Pomodoro.handlers.exit(self, restarting)
-   -- Save current state in xrdb.
-   -- run this synchronously cause otherwise it is not saved properly -.-
-   if restarting then
-      local started_as_number = self.timer.started and 1 or 0
-      local working_as_number = self.working and 1 or 0
-      self.spawn_sync('echo "awesome.Pomodoro.time: ' .. self.time_left
-			 .. '\nawesome.Pomodoro.started: ' .. started_as_number
-			 .. '\nawesome.Pomodoro.working: ' .. working_as_number
-			 .. '\nawesome.Pomodoro.npomodoros: ' .. self.npomodoros
-			 .. '" | xrdb -merge')
-   end
+    -- Save current state in xrdb.
+    -- run this synchronously cause otherwise it is not saved properly -.-
+    if restarting then
+        local started_as_number = self.timer.started and 1 or 0
+        local working_as_number = self.working and 1 or 0
+        self.spawn_sync('echo "awesome.Pomodoro.time: ' .. self.time_left
+                         .. '\nawesome.Pomodoro.started: ' .. started_as_number
+                         .. '\nawesome.Pomodoro.working: ' .. working_as_number
+                         .. '\nawesome.Pomodoro.npomodoros: ' .. self.npomodoros
+                         .. '" | xrdb -merge')
+    end
 end
 
 
@@ -296,15 +296,15 @@ function Pomodoro.handlers.ticking(self)
     self.last_time = now
 
     if self.time_left == 0 then
-	if not self.config.allow_timer_beyond_duration then
-	    self.timer:stop()
-	end
+        if not self.config.allow_timer_beyond_duration then
+            self.timer:stop()
+        end
 
-	if self.working then
-	    self.icon_widget:emit_signal("work_elapsed")
-	else
-	    self.icon_widget:emit_signal("break_elapsed")
-	end
+        if self.working then
+            self.icon_widget:emit_signal("work_elapsed")
+        else
+            self.icon_widget:emit_signal("break_elapsed")
+        end
     end
 
     self:update_timer_widget(self.time_left)
@@ -318,11 +318,11 @@ function Pomodoro.init(config)
     local self = setmetatable({}, Pomodoro)
 
     if config and type(config) == "table" then
-       for k, v in pairs(config) do
-	  if self.config[k] ~= nil then
-	     self.config[k] = v
-	  end
-       end
+        for k, v in pairs(config) do
+            if self.config[k] ~= nil then
+                self.config[k] = v
+            end
+        end
     end
 
     -- We'll try to grab the values from the last pomodoro session
@@ -334,15 +334,16 @@ function Pomodoro.init(config)
     self.working = last_run.working or true
 
     if last_run.started ~= nil then
-       self.time_left = last_run.time
+        self.time_left = last_run.time
     else
-       self.time_left = self.config.work_duration
+        self.time_left = self.config.work_duration
     end
 
     self.changed = false
     self.changed_timer = timer({timeout = 3})
     self.changed_timer:connect_signal("timeout", function ()
-					 self.handlers.changed_timer(self) end)
+        self.handlers.changed_timer(self)
+    end)
 
     self.timer_widget = wibox.widget.textbox()
     self.icon_widget = wibox.widget.textbox()
@@ -350,19 +351,24 @@ function Pomodoro.init(config)
 
     -- Timer configuration
     self.timer = timer {timeout = 1}
-    self.timer:connect_signal("timeout", function() self.handlers.ticking(self) end)
+    self.timer:connect_signal("timeout", function()
+        self.handlers.ticking(self)
+    end)
 
     -- Notifications
     self.icon_widget:connect_signal("work_elapsed", function()
-					self.notify(self.config.work_title,
-						    self.config.work_text) end)
+        self.notify(self.config.work_title,
+                    self.config.work_text)
+    end)
 
     self.icon_widget:connect_signal("break_elapsed", function()
-					self.notify(self.config.break_title,
-						    self.config.break_text) end)
+        self.notify(self.config.break_title,
+                    self.config.break_text)
+    end)
 
     self.icon_widget:connect_signal("exit", function(restart)
-					self.handlers.exit(self, restart) end)
+        self.handlers.exit(self, restart)
+    end)
 
     self.timer_widget:buttons(self:get_buttons())
     self.icon_widget:buttons(self:get_buttons())
@@ -371,10 +377,10 @@ function Pomodoro.init(config)
 
     -- Attach the tooltip to both widgets with the make_tooltip timer funciton
     awful.tooltip({objects = {self.timer_widget, self.icon_widget},
-		   timer_function = function() return self:make_tooltip() end})
+                   timer_function = function() return self:make_tooltip() end})
 
     if last_run.started then
-	self:start()
+        self:start()
     end
 
     return self
