@@ -70,7 +70,7 @@ function Pomodoro.notify(title, text)
         fg = beautiful.fg_urgent,
         title = title,
         text  = text,
-        timeout = 10})
+        timeout = 30})
 end
 
 
