@@ -81,6 +81,7 @@ function Pomodoro:load_xresources_values()
         started = tonumber(xresources:match('awesome.Pomodoro.started:%s+([01])')),
         working = tonumber(xresources:match('awesome.Pomodoro.working:%s+([01])')),
         locked = tonumber(xresources:match('awesome.Pomodoro.locked:%s+([01])')),
+        is_paused = tonumber(xresources:match('awesome.Pomodoro.paused:%s+([01])')),
         pomodoros = tonumber(xresources:match('awesome.Pomodoro.npomodoros:%s+(%d+)'))
     }
     return last_run
@@ -128,22 +129,35 @@ end
 
 function Pomodoro:update_icon_widget()
     local color
-    local work_color  = beautiful.pomodoro_work   or "#FF0000"
-    local break_color = beautiful.pomodoro_break  or "#00FF00"
+    local work_color     = beautiful.pomodoro_work     or "#FF0000"
+    local ripe_color     = beautiful.pomodoro_ripe     or "#00FF00"
+    local inactive_color = beautiful.pomodoro_inactive or "#C0C0C0"
+    local markup = "<span fgcolor='%s'>%s</span>"
+    local icon = ""
 
-    if not self.is_running then
-        -- Color for when the timer has not yet started
-        color = beautiful.pomodoro_inactive or "#C0C0C0"
+    -- Select icon based on status
+    if self.is_paused then
+        -- Paused - show a timer icon
+        icon = "&#9202;"
+
+        color = inactive_color
+
     elseif self.working then
+        -- Pomodoro - show a tomato
+        icon = "&#127813;"
+
         local amount = 1 - math.max(self.time_left / self.config.work_duration, 0)
-        color = Pomodoro.fade_color(break_color, work_color, amount)
+        color = Pomodoro.fade_color(ripe_color, work_color, amount)
     else
+        -- On break - show a beach icon
+        icon = "&#9969;"
+
         local amount = math.max(1 - self.time_left / self.config.short_break_duration, 0)
-        color = Pomodoro.fade_color(work_color, break_color, amount)
+        color = Pomodoro.fade_color(work_color, ripe_color, amount)
     end
 
-    local markup = "<span fgcolor='%s'>&#127813;</span>"
-    self.icon_widget:set_markup(markup:format(color))
+    -- Update icon
+    self.icon_widget:set_markup(markup:format(color, icon))
 end
 
 
@@ -169,8 +183,10 @@ end
 
 function Pomodoro:start()
     self.last_time = os.time()
-    self.is_running = true
     self.timer:again()
+
+    self.is_paused = false
+
     if self.working then
         self.icon_widget:emit_signal("work_start")
     else
@@ -186,7 +202,7 @@ function Pomodoro:toggle()
             self:start()
         end
     else
-        if self.is_running then
+        if self.timer.started then
             self:pause()
         else
             self:start()
@@ -196,13 +212,11 @@ end
 
 
 function Pomodoro:pause()
-    -- TODO: Fix the showed remaining text
-    self.is_running = false
-
     if self.timer.started then
         self.timer:stop()
     end
 
+    self.is_paused = true
     self:update_icon_widget()
 end
 
@@ -211,6 +225,8 @@ function Pomodoro:stop()
     if self.timer.started then
         self.timer:stop()
     end
+
+    self.is_paused = false
 
     if self.working then
         self.icon_widget:emit_signal("work_stop", self.time_left)
@@ -309,10 +325,12 @@ function Pomodoro.handlers.exit(self, restarting)
         local started_as_number = self.timer.started and 1 or 0
         local working_as_number = self.working and 1 or 0
         local locked_as_number = self.locked and 1 or 0
+        local paused_as_number = self.is_paused and 1 or 0
         self.spawn_sync('echo "awesome.Pomodoro.time: ' .. self.time_left
                          .. '\nawesome.Pomodoro.started: ' .. started_as_number
                          .. '\nawesome.Pomodoro.working: ' .. working_as_number
                          .. '\nawesome.Pomodoro.locked: ' .. locked_as_number
+                         .. '\nawesome.Pomodoro.paused: ' .. paused_as_number
                          .. '\nawesome.Pomodoro.npomodoros: ' .. self.npomodoros
                          .. '" | xrdb -merge')
     end
@@ -359,11 +377,10 @@ function Pomodoro.init(config)
     -- We'll try to grab the values from the last pomodoro session
     local last_run = self:load_xresources_values()
 
-    self.is_running = false
-
     self.npomodoros = last_run.npomodoros or 0
     self.working = last_run.working or true
     self.locked = last_run.locked or true
+    self.is_paused = last_run.is_paused or false
 
     if last_run.started ~= nil then
         self.time_left = last_run.time
