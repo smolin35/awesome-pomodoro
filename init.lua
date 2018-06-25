@@ -80,6 +80,7 @@ function Pomodoro:load_xresources_values()
         time = tonumber(xresources:match('awesome.Pomodoro.time:%s+(-?%d+)')),
         started = tonumber(xresources:match('awesome.Pomodoro.started:%s+([01])')),
         working = tonumber(xresources:match('awesome.Pomodoro.working:%s+([01])')),
+        locked = tonumber(xresources:match('awesome.Pomodoro.locked:%s+([01])')),
         pomodoros = tonumber(xresources:match('awesome.Pomodoro.npomodoros:%s+(%d+)'))
     }
     return last_run
@@ -233,31 +234,53 @@ function Pomodoro:stop()
 end
 
 
+function Pomodoro:toggle_timelock()
+    if self.locked then
+        self.locked = false
+    else
+        self.locked = true
+    end
+
+    lock_text = self.locked and "Modifying time disallowed" or "Modifying time allowed"
+
+    naughty.notify({
+	bg = beautiful.bg_info,
+	fg = beautiful.fg_normal,
+	title = "Time lock",
+	text = lock_text,
+	timeout = 5,
+    })
+
+end
+
+
 function Pomodoro:modify_time(add)
     -- Add self.config.change_step minutes to self.config.work duration if add == true,
     -- otherwise subtract.
 
-    self.changed = true
+    if not self.locked then
+        self.changed = true
 
-    if add then
-        self:update_timer_widget(self.config.work_duration + self.config.change_step)
-        self.config.work_duration = self.config.work_duration + self.config.change_step
-        self.time_left = self.config.work_duration
-    else
-        if self.config.work_duration > self.config.change_step then
-            self:update_timer_widget(self.config.work_duration - self.config.change_step)
-            self.config.work_duration = self.config.work_duration - self.config.change_step
+        if add then
+            self:update_timer_widget(self.config.work_duration + self.config.change_step)
+            self.config.work_duration = self.config.work_duration + self.config.change_step
             self.time_left = self.config.work_duration
+        else
+            if self.config.work_duration > self.config.change_step then
+                self:update_timer_widget(self.config.work_duration - self.config.change_step)
+                self.config.work_duration = self.config.work_duration - self.config.change_step
+                self.time_left = self.config.work_duration
+            end
         end
+        self.changed_timer:again()
     end
-    self.changed_timer:again()
 end
 
 
 function Pomodoro:get_buttons()
     return awful.util.table.join(
-        awful.button({ }, 1, function() self:start() end),
-        awful.button({ }, 2, function() self:pause() end),
+        awful.button({ }, 1, function() self:toggle() end),
+        awful.button({ }, 2, function() self:toggle_timelock() end),
         awful.button({ }, 3, function() self:stop() end),
         awful.button({ }, 4, function() self:modify_time(true) end),
         awful.button({ }, 5, function() self:modify_time(false) end)
@@ -283,9 +306,11 @@ function Pomodoro.handlers.exit(self, restarting)
     if restarting then
         local started_as_number = self.timer.started and 1 or 0
         local working_as_number = self.working and 1 or 0
+        local locked_as_number = self.locked and 1 or 0
         self.spawn_sync('echo "awesome.Pomodoro.time: ' .. self.time_left
                          .. '\nawesome.Pomodoro.started: ' .. started_as_number
                          .. '\nawesome.Pomodoro.working: ' .. working_as_number
+                         .. '\nawesome.Pomodoro.locked: ' .. locked_as_number
                          .. '\nawesome.Pomodoro.npomodoros: ' .. self.npomodoros
                          .. '" | xrdb -merge')
     end
@@ -336,6 +361,7 @@ function Pomodoro.init(config)
 
     self.npomodoros = last_run.npomodoros or 0
     self.working = last_run.working or true
+    self.locked = last_run.locked or true
 
     if last_run.started ~= nil then
         self.time_left = last_run.time
