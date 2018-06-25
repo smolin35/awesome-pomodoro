@@ -111,13 +111,15 @@ function Pomodoro:make_tooltip()
                                format_time(self.config.long_break_duration))
 
     if self.timer.started then
+        local state = 'Break'
+
         if self.working then
-            return collected .. 'Work ending in ' .. os.date("%M:%S", self.time_left)
-        else
-            return collected .. 'Rest ending in ' .. os.date("%M:%S", self.time_left)
+            state = 'Work'
         end
+
+        return collected .. state .. ' ending in ' .. format_time(self.time_left)
     else
-        return string.format("%s\nPomodoro not started\n\n%s",
+        return string.format("%s\nPomodoro not running\n\n%s",
                              collected,
                              settings)
     end
@@ -377,13 +379,14 @@ function Pomodoro.init(config)
 
     self.timer_widget = wibox.widget.textbox()
     self.icon_widget = wibox.widget.textbox()
-    self:update_icon_widget()
 
     -- Timer configuration
-    self.timer = timer {timeout = 1}
+    self.timer = timer{timeout = 1}
     self.timer:connect_signal("timeout", function()
         self.handlers.ticking(self)
     end)
+
+    self:update_icon_widget()
 
     -- Notifications
     self.icon_widget:connect_signal("work_elapsed", function()
