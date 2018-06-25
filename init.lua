@@ -46,6 +46,8 @@ Pomodoro.config = {
 
     change_step = 60,
 
+    long_break_frequency = 4,
+
     short_break_duration = 5 * 60,
     long_break_duration = 15 * 60,
     work_duration = 25 * 60,
@@ -213,7 +215,9 @@ function Pomodoro:stop()
 
         self.npomodoros = self.npomodoros + 1
 
-        if self.npomodoros % 4 == 0 then
+        local long_break_frequency = self.config.long_break_frequency
+
+        if self.npomodoros % long_break_frequency == 0 then
             self.time_left = self.config.long_break_duration
         else
             self.time_left = self.config.short_break_duration
