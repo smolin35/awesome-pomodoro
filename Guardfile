@@ -1,5 +1,5 @@
 guard :shell do
   watch /\.lua/ do |m|
-    `busted impl_test.lua`
+    `busted spec/init_spec.lua`
   end
 end

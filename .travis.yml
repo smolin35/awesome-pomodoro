@@ -11,4 +11,4 @@ install:
   - sudo luarocks install luafilesystem
   - sudo luarocks install busted
 
-script: "busted *_test.lua"
+script: "busted spec/init_spec.lua"
