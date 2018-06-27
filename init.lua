@@ -416,7 +416,7 @@ function Pomodoro.init(config)
                     self.config.break_text)
     end)
 
-    self.icon_widget:connect_signal("exit", function(restart)
+    awesome.connect_signal("exit", function(restart)
         self.handlers.exit(self, restart)
     end)
 
