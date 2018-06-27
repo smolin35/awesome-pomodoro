@@ -147,13 +147,13 @@ function Pomodoro:update_icon_widget()
         icon = "&#127813;"
 
         local amount = 1 - math.max(self.time_left / self.config.work_duration, 0)
-        color = Pomodoro.fade_color(ripe_color, work_color, amount)
+        color = Pomodoro.fade_color(work_color, ripe_color, amount)
     else
         -- On break - show a beach icon
         icon = "&#9969;"
 
         local amount = math.max(1 - self.time_left / self.config.short_break_duration, 0)
-        color = Pomodoro.fade_color(work_color, ripe_color, amount)
+        color = Pomodoro.fade_color(ripe_color, work_color, amount)
     end
 
     -- Update icon
