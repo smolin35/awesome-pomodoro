@@ -1,4 +1,10 @@
 package.path = "./spec/mocked/?.lua;" .. package.path
+
+-- awesome is always defined in the environment of awesome modules
+-- this means tests will not load the mocked awesome.lua
+-- to workaround we load it here and bind it to the global table/namespace
+_G.awesome = require("awesome")
+
 local Pomodoro = require "init"
 
 
