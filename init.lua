@@ -74,20 +74,6 @@ function Pomodoro.notify(title, text)
 end
 
 
-function Pomodoro:load_xresources_values()
-    local xresources = self.spawn_sync('xrdb -query')
-    local last_run = {
-        time = tonumber(xresources:match('awesome.Pomodoro.time:%s+(-?%d+)')),
-        started = tonumber(xresources:match('awesome.Pomodoro.started:%s+([01])')),
-        working = tonumber(xresources:match('awesome.Pomodoro.working:%s+([01])')),
-        locked = tonumber(xresources:match('awesome.Pomodoro.locked:%s+([01])')),
-        is_paused = tonumber(xresources:match('awesome.Pomodoro.paused:%s+([01])')),
-        pomodoros = tonumber(xresources:match('awesome.Pomodoro.npomodoros:%s+(%d+)'))
-    }
-    return last_run
-end
-
-
 function Pomodoro.fade_color(color1, color2, amount)
     -- Return an interpolation of the color1 and color2
     -- based on amount
@@ -315,6 +301,20 @@ function Pomodoro.handlers.changed_timer(self)
     self.changed_timer:again()
     self.changed_timer:stop()
     self.timer_widget:set_markup(format_time(self.config.work_duration))
+end
+
+
+function Pomodoro:load_xresources_values()
+    local xresources = self.spawn_sync('xrdb -query')
+    local last_run = {
+        time = tonumber(xresources:match('awesome.Pomodoro.time:%s+(-?%d+)')),
+        started = tonumber(xresources:match('awesome.Pomodoro.started:%s+([01])')),
+        working = tonumber(xresources:match('awesome.Pomodoro.working:%s+([01])')),
+        locked = tonumber(xresources:match('awesome.Pomodoro.locked:%s+([01])')),
+        is_paused = tonumber(xresources:match('awesome.Pomodoro.paused:%s+([01])')),
+        pomodoros = tonumber(xresources:match('awesome.Pomodoro.npomodoros:%s+(%d+)'))
+    }
+    return last_run
 end
 
 
