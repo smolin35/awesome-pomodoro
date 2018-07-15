@@ -382,7 +382,7 @@ function Pomodoro.init(config)
     self.locked = last_run.locked or true
     self.is_paused = last_run.is_paused or false
 
-    if last_run.started ~= nil then
+    if last_run.time ~= nil then
         self.time_left = last_run.time
     else
         self.time_left = self.config.work_duration
