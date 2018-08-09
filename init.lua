@@ -314,6 +314,15 @@ function boolify(num)
 end
 
 
+function nildefault(val, default)
+    if val == nil then
+        return default
+    else
+        return val
+    end
+end
+
+
 function Pomodoro:load_xresources_values()
     local xresources = self.spawn_sync('xrdb -query')
     local last_run = {
@@ -394,8 +403,8 @@ function Pomodoro.init(config)
     local last_run = self:load_xresources_values()
 
     self.npomodoros = last_run.npomodoros or 0
-    self.working = last_run.working or true
-    self.locked = last_run.locked or true
+    self.working = nildefault(last_run.working, true)
+    self.locked = nildefault(last_run.locked, true)
     self.is_paused = last_run.is_paused or false
 
     if last_run.time ~= nil then
