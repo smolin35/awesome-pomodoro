@@ -454,7 +454,7 @@ function Pomodoro.init(config)
     awful.tooltip({objects = {self.timer_widget, self.icon_widget},
                    timer_function = function() return self:make_tooltip() end})
 
-    if last_run.started then
+    if last_run.started and not last_run.is_paused then
         self:start()
     end
 
