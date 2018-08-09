@@ -304,14 +304,30 @@ function Pomodoro.handlers.changed_timer(self)
 end
 
 
+function numify(var)
+    return var and 1 or 0
+end
+
+
+function boolify(num)
+    return tonumber(num) == 1 or false
+end
+
+
 function Pomodoro:load_xresources_values()
     local xresources = self.spawn_sync('xrdb -query')
     local last_run = {
+        -- time = time remaining in the timer/clock
         time = tonumber(xresources:match('awesome.Pomodoro.time:%s+(-?%d+)')),
-        started = tonumber(xresources:match('awesome.Pomodoro.started:%s+([01])')),
-        working = tonumber(xresources:match('awesome.Pomodoro.working:%s+([01])')),
-        locked = tonumber(xresources:match('awesome.Pomodoro.locked:%s+([01])')),
-        is_paused = tonumber(xresources:match('awesome.Pomodoro.paused:%s+([01])')),
+        -- boolean = if internal timer is running, true when pomodoro is active
+        started = boolify(xresources:match('awesome.Pomodoro.started:%s+([01])')),
+        -- boolean = true when on a work pomodoro (i.e. not a break)
+        working = boolify(xresources:match('awesome.Pomodoro.working:%s+([01])')),
+        -- boolean = prevents changing time with mouse scroll
+        locked = boolify(xresources:match('awesome.Pomodoro.locked:%s+([01])')),
+        -- boolean = when started but timer is not running. This is somewhat redundant with started
+        is_paused = boolify(xresources:match('awesome.Pomodoro.paused:%s+([01])')),
+        -- number of pomodoros completed so far
         pomodoros = tonumber(xresources:match('awesome.Pomodoro.npomodoros:%s+(%d+)'))
     }
     return last_run
@@ -322,10 +338,10 @@ function Pomodoro.handlers.exit(self, restarting)
     -- Save current state in xrdb.
     -- run this synchronously cause otherwise it is not saved properly -.-
     if restarting then
-        local started_as_number = self.timer.started and 1 or 0
-        local working_as_number = self.working and 1 or 0
-        local locked_as_number = self.locked and 1 or 0
-        local paused_as_number = self.is_paused and 1 or 0
+        local started_as_number = numify(self.timer.started)
+        local working_as_number = numify(self.working)
+        local locked_as_number = numify(self.locked)
+        local paused_as_number = numify(self.is_paused)
         self.spawn_sync('echo "awesome.Pomodoro.time: ' .. self.time_left
                          .. '\nawesome.Pomodoro.started: ' .. started_as_number
                          .. '\nawesome.Pomodoro.working: ' .. working_as_number
