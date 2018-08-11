@@ -309,8 +309,13 @@ function numify(var)
 end
 
 
-function boolify(num)
-    return tonumber(num) == 1 or false
+function nilboolify(num)
+    val = tonumber(num)
+    if val == nil then
+        return nil
+    else
+        return val == 1 or false
+    end
 end
 
 
@@ -329,13 +334,13 @@ function Pomodoro:load_xresources_values()
         -- time = time remaining in the timer/clock
         time = tonumber(xresources:match('awesome.Pomodoro.time:%s+(-?%d+)')),
         -- boolean = if internal timer is running, true when pomodoro is active
-        started = boolify(xresources:match('awesome.Pomodoro.started:%s+([01])')),
+        started = nilboolify(xresources:match('awesome.Pomodoro.started:%s+([01])')),
         -- boolean = true when on a work pomodoro (i.e. not a break)
-        working = boolify(xresources:match('awesome.Pomodoro.working:%s+([01])')),
+        working = nilboolify(xresources:match('awesome.Pomodoro.working:%s+([01])')),
         -- boolean = prevents changing time with mouse scroll
-        locked = boolify(xresources:match('awesome.Pomodoro.locked:%s+([01])')),
+        locked = nilboolify(xresources:match('awesome.Pomodoro.locked:%s+([01])')),
         -- boolean = when started but timer is not running. This is somewhat redundant with started
-        is_paused = boolify(xresources:match('awesome.Pomodoro.paused:%s+([01])')),
+        is_paused = nilboolify(xresources:match('awesome.Pomodoro.paused:%s+([01])')),
         -- number of pomodoros completed so far
         pomodoros = tonumber(xresources:match('awesome.Pomodoro.npomodoros:%s+(%d+)'))
     }
