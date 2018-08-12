@@ -69,7 +69,7 @@ describe('Stopping a pomodoro', function()
         assert.are.equal(false, pomodoro.is_paused)
     end)
     it('should toggle working', function()
-        working = pomodoro.working
+        working = true
         pomodoro:stop()
         assert.are.not_equal(working, pomodoro.working)
         pomodoro:stop()
@@ -178,13 +178,11 @@ describe('Preserving pomodoros between restarts', function()
         local pomodoro = Pomodoro()
         local s = spy.on(pomodoro, 'start')
     end)
-    it('should use the normal duration and don\'t start a pomodoro if not found in the database', function()
+    it('should use the normal duration and not start a pomodoro if not found in the database', function()
         -- Ensure work_duration is still the original value
         Pomodoro.config.work_duration = 1500
         Pomodoro.spawn_sync = function()
             return [[
-            awesome.Pomodoro.time:  716
-            awesome.Pomodoro.working: 1
             XTerm*faceName: consolas
             xterm*.background:      grey5
             ]]
