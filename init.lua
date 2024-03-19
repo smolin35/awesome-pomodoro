@@ -124,19 +124,19 @@ function Pomodoro:update_icon_widget()
     -- Select icon based on status
     if self.is_paused then
         -- Paused - show a timer icon
-        icon = "&#9202;"
+        icon = "&#9874;"
 
         color = inactive_color
 
     elseif self.working then
         -- Pomodoro - show a tomato
-        icon = "&#127813;"
-
+        icon = "&#9874;"
+			
         local amount = 1 - math.max(self.time_left / self.config.work_duration, 0)
         color = Pomodoro.fade_color(work_color, ripe_color, amount)
     else
         -- On break - show a beach icon
-        icon = "&#9969;"
+        icon = "&#9874;"
 
         local amount = math.max(1 - self.time_left / self.config.short_break_duration, 0)
         color = Pomodoro.fade_color(ripe_color, work_color, amount)
